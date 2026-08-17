@@ -22,10 +22,9 @@
   .camwrap{position:relative; width:100%; aspect-ratio:3/4; background:#000;
     border-radius:14px; overflow:hidden; border:1px solid var(--line);}
   video{width:100%; height:100%; object-fit:cover; display:block;}
-  /* Zielrahmen (Guide) */
   .guide{position:absolute; left:6%; right:6%; border:2px dashed var(--accent);
     border-radius:8px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,.28);}
-  .guide.name{top:5%; height:12%;}
+  .guide.name{top:4%; height:13%;}
   .guide.code{bottom:6%; height:9%; left:40%; right:6%;}
   .guide-label{position:absolute; background:var(--accent); color:#111; font-size:.68rem;
     font-weight:700; padding:2px 6px; border-radius:5px; top:-10px; left:6px;}
@@ -42,7 +41,9 @@
     font-size:1rem; background:var(--accent); color:#111;}
   .btn:active{transform:translateY(1px);}
   .btn.sec{background:var(--panel2); color:var(--text); flex:0 0 auto; padding:14px 16px;}
+  .btn.photo{background:var(--panel2); color:var(--text);}
   .btn:disabled{opacity:.5;}
+  #fileInput{display:none;}
 
   .status{margin-top:10px; font-size:.85rem; color:var(--muted); min-height:1.1em;}
   .bar{height:6px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-top:6px; display:none;}
@@ -53,10 +54,18 @@
   label.fld{display:block; font-size:.75rem; color:var(--muted); margin-bottom:4px;}
   input[type=text]{width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
     background:var(--bg); color:var(--text); font-size:1.05rem;}
-  .match{display:flex; gap:12px; margin-top:12px; align-items:center;}
-  .match img{width:74px; border-radius:6px; background:#000;}
-  .match .info{font-size:.85rem;}
-  .match .info b{display:block; font-size:.95rem;}
+  .rawline{font-size:.72rem; color:var(--muted); margin:6px 2px 0;}
+
+  .candTitle{font-size:.78rem; color:var(--muted); margin:14px 0 6px;}
+  .cand{display:flex; gap:10px; align-items:center; width:100%; text-align:left;
+    background:var(--bg); border:1px solid var(--line); border-radius:10px;
+    padding:8px; margin-bottom:8px; color:var(--text);}
+  .cand img{width:42px; height:auto; border-radius:4px; background:#000; flex:0 0 auto;}
+  .cand .cinfo{flex:1; min-width:0;}
+  .cand .cinfo b{display:block; font-size:.92rem; line-height:1.2;}
+  .cand .cinfo span{font-size:.72rem; color:var(--muted);}
+  .cand .score{font-size:.68rem; color:var(--accent2); font-weight:700; flex:0 0 auto;}
+
   .cmbtn{display:block; text-align:center; text-decoration:none; margin-top:14px;
     padding:14px; border-radius:12px; background:var(--ok); color:#04220f; font-weight:800; font-size:1rem;}
   .cmbtn.alt{background:var(--panel2); color:var(--text); margin-top:8px; font-weight:600;}
@@ -72,7 +81,7 @@
 <body>
 
 <h1><span class="logo">🃏</span> Karten-Scanner</h1>
-<p class="sub">Karte in den Rahmen halten → scannen → auf Cardmarket suchen.</p>
+<p class="sub">Karte scannen oder fotografieren → passende Karte antippen → auf Cardmarket suchen.</p>
 
 <div class="camwrap">
   <video id="video" playsinline autoplay muted></video>
@@ -88,33 +97,37 @@
 </div>
 
 <div class="row">
-  <button id="scanBtn" class="btn">📸 Scannen</button>
+  <button id="scanBtn" class="btn">📸 Live scannen</button>
   <button id="switchBtn" class="btn sec" title="Kamera wechseln">🔄</button>
 </div>
+<div class="row">
+  <button id="photoBtn" class="btn photo">🖼️ Foto aufnehmen (schärfer)</button>
+</div>
+<input type="file" id="fileInput" accept="image/*" capture="environment">
 
 <div class="status" id="status"></div>
 <div class="bar" id="bar"><i></i></div>
 
 <div class="card" id="result">
-  <label class="fld" for="text">Erkannter Text (kannst du korrigieren):</label>
+  <label class="fld" for="text">Suchbegriff (antippbarer Treffer setzt ihn automatisch):</label>
   <input type="text" id="text" autocomplete="off" autocapitalize="off" spellcheck="false">
-  <div class="match" id="match" style="display:none">
-    <img id="matchImg" alt="">
-    <div class="info">
-      <b id="matchName"></b>
-      <span id="matchMeta"></span>
-    </div>
+  <div class="rawline" id="rawline"></div>
+
+  <div id="candWrap" style="display:none">
+    <div class="candTitle">Passt eine dieser Karten? Zum Übernehmen antippen:</div>
+    <div id="cands"></div>
   </div>
+
   <a class="cmbtn" id="cmLink" target="_blank" rel="noopener">🛒 Auf Cardmarket suchen</a>
-  <a class="cmbtn alt" id="cmLinkRaw" target="_blank" rel="noopener">Suche mit rohem Text</a>
 </div>
 
 <canvas id="canvas"></canvas>
 
 <p class="foot">
-  Tipp: Gutes Licht, Karte flach, Rahmen füllen. <br>
-  Der <b>Kartenname</b> wird über <a style="color:var(--accent2)" href="https://ygoprodeck.com" target="_blank" rel="noopener">YGOPRODeck</a> geprüft und korrigiert.
-  Der Link geht auf <code>cardmarket.com/de</code> (das ist die Ziel-Seite von cardmarket.ch).
+  <b>Tipp:</b> Für den Namen ist „🖼️ Foto aufnehmen" meist deutlich zuverlässiger als das Live-Bild.
+  Der erkannte Text wird mit der Kartendatenbank von
+  <a style="color:var(--accent2)" href="https://ygoprodeck.com" target="_blank" rel="noopener">YGOPRODeck</a>
+  abgeglichen – auch bei Lesefehlern. Der Link geht auf <code>cardmarket.com/de</code> (Zielseite von cardmarket.ch).
 </p>
 
 <div class="toast" id="toast"></div>
@@ -125,174 +138,253 @@ const $ = id => document.getElementById(id);
 const video=$("video"), canvas=$("canvas"), ctx=canvas.getContext("2d",{willReadFrequently:true});
 const guide=$("guide"), guideLabel=$("guideLabel"), camhint=$("camhint");
 const statusEl=$("status"), bar=$("bar"), barI=bar.querySelector("i");
-const result=$("result"), textInput=$("text");
-const matchBox=$("match"), matchImg=$("matchImg"), matchName=$("matchName"), matchMeta=$("matchMeta");
-const cmLink=$("cmLink"), cmLinkRaw=$("cmLinkRaw"), toast=$("toast");
+const result=$("result"), textInput=$("text"), rawline=$("rawline");
+const candWrap=$("candWrap"), cands=$("cands");
+const cmLink=$("cmLink"), toast=$("toast"), fileInput=$("fileInput");
 
-let mode="name";           // "name" | "code"
-let stream=null;
-let useBackCam=true;
+let mode="name";
+let stream=null, useBackCam=true;
 let worker=null, workerReady=false;
 
 const CM_BASE="https://www.cardmarket.com/de/YuGiOh/Products/Search?searchString=";
-
-// ---- Set-Code Erkennung: z.B. LOB-EN001, MP23-DE045, SDK-001, RA01-EN000 ----
 const SETCODE_RE=/\b([A-Z0-9]{2,5})-([A-Z]{1,3})?(\d{2,3})\b/;
 
-function say(msg){ statusEl.textContent=msg||""; }
-function showToast(msg){ toast.textContent=msg; toast.style.display="block";
-  clearTimeout(toast._t); toast._t=setTimeout(()=>toast.style.display="none",3500); }
+function say(m){ statusEl.textContent=m||""; }
+function showToast(m){ toast.textContent=m; toast.style.display="block";
+  clearTimeout(toast._t); toast._t=setTimeout(()=>toast.style.display="none",3800); }
+function prog(p){ bar.style.display="block"; barI.style.width=p+"%"; }
+function progDone(){ bar.style.display="none"; barI.style.width="0"; }
 
-// ---------- Kamera ----------
+/* ---------------- Kamera ---------------- */
 async function startCam(){
-  if(stream){ stream.getTracks().forEach(t=>t.stop()); }
+  if(stream) stream.getTracks().forEach(t=>t.stop());
   try{
     stream=await navigator.mediaDevices.getUserMedia({
-      video:{ facingMode: useBackCam?{ideal:"environment"}:"user",
-              width:{ideal:1920}, height:{ideal:1080} },
-      audio:false
-    });
-    video.srcObject=stream;
-    await video.play();
+      video:{ facingMode:useBackCam?{ideal:"environment"}:"user",
+              width:{ideal:1920}, height:{ideal:1080} }, audio:false });
+    video.srcObject=stream; await video.play();
     camhint.textContent="Karte im Rahmen ausrichten";
   }catch(e){
     camhint.textContent="Kamera nicht verfügbar";
-    showToast("Kamera-Zugriff nötig. Öffne die Seite über HTTPS und erlaube die Kamera.");
+    showToast("Kamera-Zugriff noetig: Seite ueber HTTPS oeffnen und Kamera erlauben. Du kannst trotzdem den Foto-Modus nutzen.");
     console.error(e);
   }
 }
+$("switchBtn").onclick=()=>{ useBackCam=!useBackCam; startCam(); };
 
-// ---------- Tesseract ----------
+/* ---------------- OCR-Worker ---------------- */
 async function initOCR(){
-  say("Texterkennung wird geladen … (einmalig, ~10 s)");
-  bar.style.display="block"; barI.style.width="15%";
+  say("Texterkennung wird geladen … (einmalig)"); prog(15);
   worker=await Tesseract.createWorker(["eng","deu"],1,{
-    logger:m=>{ if(m.status==="recognizing text") barI.style.width=(20+m.progress*80)+"%"; }
+    logger:m=>{ if(m.status==="recognizing text") prog(20+m.progress*80); }
   });
-  workerReady=true;
-  bar.style.display="none"; barI.style.width="0";
-  say("Bereit. 📸 Scannen drücken.");
+  workerReady=true; progDone(); say("Bereit.");
 }
 
-// ---------- Modus ----------
+/* ---------------- Modus ---------------- */
 function setMode(m){
   mode=m;
   $("mName").classList.toggle("active",m==="name");
   $("mCode").classList.toggle("active",m==="code");
   guide.className="guide "+m;
-  guideLabel.textContent = m==="name" ? "Kartenname" : "Set-Code";
+  guideLabel.textContent=m==="name"?"Kartenname":"Set-Code";
 }
 $("mName").onclick=()=>setMode("name");
 $("mCode").onclick=()=>setMode("code");
 
-// ---------- Ausschnitt aus dem Video holen (entspricht dem Guide-Rahmen) ----------
-function grabRegion(){
-  const vw=video.videoWidth, vh=video.videoHeight;
-  if(!vw||!vh) return null;
-  // Guide-Prozente je nach Modus (müssen zum CSS oben passen)
-  const g = mode==="name"
-    ? {l:.06, t:.05, w:.88, h:.12}
-    : {l:.40, t:.85, w:.54, h:.09};
-  const sx=g.l*vw, sy=g.t*vh, sw=g.w*vw, sh=g.h*vh;
-  const scale=3; // hochskalieren für bessere OCR
-  canvas.width=sw*scale; canvas.height=sh*scale;
-  ctx.drawImage(video, sx,sy,sw,sh, 0,0,canvas.width,canvas.height);
-  // Vorverarbeitung: Graustufen + Kontrast/Schwellwert
-  const img=ctx.getImageData(0,0,canvas.width,canvas.height);
-  const d=img.data;
+/* ---------------- Bild vorbereiten (Graustufen + Kontrast) ---------------- */
+function preprocess(){
+  const img=ctx.getImageData(0,0,canvas.width,canvas.height), d=img.data;
+  // Mittelwert für optionale Invertierung (helle Schrift auf dunklem Balken)
+  let sum=0;
+  for(let i=0;i<d.length;i+=4){ const v=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2]; d[i]=d[i+1]=d[i+2]=v; sum+=v; }
+  const mean=sum/(d.length/4);
+  const invert = mean<120; // dunkler Hintergrund -> invertieren, damit Text dunkel wird
   for(let i=0;i<d.length;i+=4){
-    let v=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2];
-    v=(v-128)*1.5+128;            // Kontrast
-    v=v<115?0:(v>150?255:v);      // sanfter Schwellwert
+    let v=d[i];
+    v=(v-128)*1.6+128;            // Kontrast
+    if(invert) v=255-v;
+    v=Math.max(0,Math.min(255,v));
     d[i]=d[i+1]=d[i+2]=v;
   }
   ctx.putImageData(img,0,0);
-  return canvas;
 }
 
-// ---------- Scannen ----------
+/* Ausschnitt aus dem Live-Video (entspricht dem Guide-Rahmen) */
+function grabFromVideo(){
+  const vw=video.videoWidth, vh=video.videoHeight;
+  if(!vw||!vh) return false;
+  const g = mode==="name" ? {l:.06,t:.04,w:.88,h:.13} : {l:.40,t:.85,w:.54,h:.09};
+  drawCrop(video, vw,vh, g); return true;
+}
+/* Ausschnitt aus einem fertigen Foto (Karte füllt das Bild) */
+function grabFromImage(im){
+  const iw=im.naturalWidth, ih=im.naturalHeight;
+  const g = mode==="name" ? {l:.04,t:.03,w:.92,h:.13} : {l:.38,t:.88,w:.58,h:.08};
+  drawCrop(im, iw,ih, g);
+}
+function drawCrop(src, w, h, g){
+  const sx=g.l*w, sy=g.t*h, sw=g.w*w, sh=g.h*h, scale=3;
+  canvas.width=sw*scale; canvas.height=sh*scale;
+  ctx.drawImage(src, sx,sy,sw,sh, 0,0,canvas.width,canvas.height);
+  preprocess();
+}
+
+/* ---------------- OCR ausführen ---------------- */
+async function runOCR(){
+  const cfg = mode==="code"
+    ? { tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" } : {};
+  await worker.setParameters(cfg);
+  let raw="";
+  try{ raw=(await worker.recognize(canvas)).data.text; }
+  catch(e){ showToast("Erkennung fehlgeschlagen."); console.error(e); }
+  return (raw||"").replace(/\s+/g," ").trim();
+}
+
+/* Live scannen */
 $("scanBtn").onclick=async ()=>{
   if(!workerReady){ showToast("OCR lädt noch – kurz warten."); return; }
-  const cv=grabRegion();
-  if(!cv){ showToast("Kamera noch nicht bereit."); return; }
-  say("Lese Text …"); bar.style.display="block"; barI.style.width="20%";
-
-  const cfg = mode==="code"
-    ? { tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" }
-    : {};
-  await worker.setParameters(cfg);
-
-  let raw="";
-  try{ raw=(await worker.recognize(cv)).data.text; }
-  catch(e){ showToast("Erkennung fehlgeschlagen."); console.error(e); }
-  bar.style.display="none"; barI.style.width="0";
-
-  raw=(raw||"").replace(/\s+/g," ").trim();
-  handleResult(raw);
+  if(!grabFromVideo()){ showToast("Kamera noch nicht bereit."); return; }
+  say("Lese Text …"); prog(20);
+  const raw=await runOCR(); progDone();
+  await handleResult(raw);
 };
 
-function handleResult(raw){
-  result.style.display="block";
-  matchBox.style.display="none";
-  let value=raw;
+/* Foto aufnehmen / auswählen */
+$("photoBtn").onclick=()=>{ if(!workerReady){showToast("OCR lädt noch – kurz warten.");return;} fileInput.click(); };
+fileInput.onchange=e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  const im=new Image();
+  im.onload=async ()=>{
+    say("Lese Text …"); prog(20);
+    grabFromImage(im);
+    const raw=await runOCR(); progDone();
+    URL.revokeObjectURL(im.src);
+    await handleResult(raw);
+  };
+  im.src=URL.createObjectURL(f);
+  fileInput.value="";
+};
+
+/* ---------------- Ergebnis verarbeiten ---------------- */
+function cleanName(s){
+  return s.replace(/[^A-Za-zÄÖÜäöüß0-9'’,.\- ]/g," ").replace(/\s+/g," ").trim();
+}
+async function handleResult(raw){
+  result.style.display="block"; candWrap.style.display="none"; cands.innerHTML="";
+  rawline.textContent = raw ? ("Rohtext: „"+raw+"“") : "Kein Text erkannt.";
 
   if(mode==="code"){
     const up=raw.toUpperCase().replace(/[^A-Z0-9\- ]/g,"");
     const m=up.match(SETCODE_RE);
-    value = m ? m[0] : up.trim();
-    say(m ? "Set-Code erkannt." : "Kein klares Set-Code-Muster – bitte prüfen.");
-  }else{
-    // Name: Zeilen säubern
-    value=raw.replace(/[^A-Za-zÄÖÜäöüß0-9'’,.\- ]/g,"").replace(/\s+/g," ").trim();
-    say("Name erkannt – wird geprüft …");
+    const val=m?m[0]:up.trim();
+    textInput.value=val; buildLink(val);
+    say(m?"Set-Code erkannt.":"Kein klares Muster – bitte prüfen/korrigieren.");
+    return;
   }
 
-  textInput.value=value;
-  buildLinks(value);
-
-  if(mode==="name" && value.length>=3){ verifyName(value); }
+  const val=cleanName(raw);
+  textInput.value=val; buildLink(val);
+  if(val.length<3){ say("Zu wenig erkannt – bitte erneut oder Foto verwenden."); return; }
+  say("Suche passende Karten …");
+  await findCandidates(val);
 }
 
-// ---------- Cardmarket-Links ----------
-function buildLinks(q){
-  const enc=encodeURIComponent(q.trim());
-  cmLink.href=CM_BASE+enc;
-  cmLinkRaw.href=CM_BASE+encodeURIComponent(textInput.value.trim());
-  cmLink.textContent="🛒 „"+ (q.length>28?q.slice(0,28)+"…":q) +"“ auf Cardmarket suchen";
+/* ---------------- Kandidaten über YGOPRODeck (fuzzy) ---------------- */
+function lev(a,b){
+  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
+  const dp=Array.from({length:m+1},(_,i)=>i);
+  for(let j=1;j<=n;j++){
+    let prev=dp[0]; dp[0]=j;
+    for(let i=1;i<=m;i++){
+      const tmp=dp[i];
+      dp[i]=Math.min(dp[i]+1, dp[i-1]+1, prev+(a[i-1]===b[j-1]?0:1));
+      prev=tmp;
+    }
+  }
+  return dp[m];
+}
+const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
+function similarity(a,b){
+  a=norm(a); b=norm(b); if(!a||!b) return 0;
+  const d=lev(a,b); let s=1-d/Math.max(a.length,b.length);
+  if(b.includes(a)||a.includes(b)) s=Math.max(s,.75);   // Teilstring-Bonus
+  return s;
 }
 
-// ---------- Name über YGOPRODeck prüfen/korrigieren ----------
-async function verifyName(name){
+async function fnameSearch(q){
   try{
-    const url="https://db.ygoprodeck.com/api/v7/cardinfo.php?fname="+encodeURIComponent(name)+"&num=1&offset=0";
-    const r=await fetch(url);
-    if(!r.ok) throw 0;
-    const j=await r.json();
-    const card=j.data && j.data[0];
-    if(!card) throw 0;
-    matchBox.style.display="flex";
-    matchImg.src=card.card_images?.[0]?.image_url_small || "";
-    matchName.textContent=card.name;
-    matchMeta.textContent=(card.type||"")+(card.race?" · "+card.race:"");
-    textInput.value=card.name;      // korrigierten Namen übernehmen
-    buildLinks(card.name);
-    say("Karte gefunden ✔ – Name übernommen.");
-  }catch(_){
-    say("Kein Treffer in der Datenbank – nutze den erkannten Text.");
-  }
+    const r=await fetch("https://db.ygoprodeck.com/api/v7/cardinfo.php?fname="+encodeURIComponent(q)+"&num=25&offset=0");
+    if(!r.ok) return [];
+    const j=await r.json(); return j.data||[];
+  }catch(_){ return []; }
 }
 
-// Manuelle Korrektur → Links aktualisieren
-textInput.addEventListener("input",()=>buildLinks(textInput.value));
-
-// Kamera wechseln
-$("switchBtn").onclick=()=>{ useBackCam=!useBackCam; startCam(); };
-
-// ---------- Start ----------
-(async function(){
-  if(!navigator.mediaDevices?.getUserMedia){
-    showToast("Dieser Browser unterstützt keine Kamera-API.");
+async function findCandidates(ocr){
+  const cleaned=cleanName(ocr);
+  const words=cleaned.split(/\s+/).filter(w=>w.length>=4);
+  const queries=[];
+  if(cleaned.length>=4 && cleaned.length<=40) queries.push(cleaned);
+  for(let i=0;i<words.length;i++){
+    if(i+1<words.length) queries.push(words[i]+" "+words[i+1]); // Wortpaare
   }
+  words.forEach(w=>queries.push(w));                              // Einzelwörter
+
+  const seen=new Set(), pool=[];
+  for(const q of [...new Set(queries)]){
+    const res=await fnameSearch(q);
+    for(const c of res){ if(!seen.has(c.id)){ seen.add(c.id); pool.push(c); } }
+    if(pool.length>=120) break;
+  }
+
+  if(!pool.length){
+    say("Keine Treffer gefunden – Suchbegriff ggf. korrigieren.");
+    candWrap.style.display="none"; return;
+  }
+
+  pool.forEach(c=>c._s=similarity(cleaned,c.name));
+  pool.sort((a,b)=>b._s-a._s);
+  const top=pool.slice(0,6);
+
+  renderCandidates(top);
+  // besten Treffer direkt übernehmen, wenn deutlich
+  if(top[0] && top[0]._s>=0.55){ pick(top[0]); say("Bester Treffer übernommen – bei Bedarf anderen antippen."); }
+  else say("Bitte passende Karte antippen (oder Text korrigieren).");
+}
+
+function renderCandidates(list){
+  cands.innerHTML="";
+  list.forEach(c=>{
+    const el=document.createElement("button");
+    el.className="cand";
+    const img=c.card_images?.[0]?.image_url_small||"";
+    el.innerHTML=`<img src="${img}" alt="" loading="lazy">
+      <div class="cinfo"><b></b><span></span></div>
+      <div class="score">${Math.round(c._s*100)}%</div>`;
+    el.querySelector("b").textContent=c.name;
+    el.querySelector("span").textContent=(c.type||"")+(c.race?" · "+c.race:"");
+    el.onclick=()=>pick(c);
+    cands.appendChild(el);
+  });
+  candWrap.style.display="block";
+}
+
+function pick(c){
+  textInput.value=c.name; buildLink(c.name);
+  [...cands.children].forEach(ch=>ch.style.outline="");
+}
+
+/* ---------------- Cardmarket-Link ---------------- */
+function buildLink(q){
+  q=(q||"").trim();
+  cmLink.href=CM_BASE+encodeURIComponent(q);
+  cmLink.textContent="🛒 „"+(q.length>30?q.slice(0,30)+"…":q)+"“ auf Cardmarket suchen";
+}
+textInput.addEventListener("input",()=>buildLink(textInput.value));
+
+/* ---------------- Start ---------------- */
+(async function(){
+  if(!navigator.mediaDevices?.getUserMedia) showToast("Browser ohne Kamera-API - bitte den Foto-Modus nutzen.");
   await startCam();
   initOCR();
 })();
