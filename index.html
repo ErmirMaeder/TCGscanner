@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#0f172a">
-<title>Yu-Gi-Oh! Karten-Scanner → Cardmarket</title>
+<title>Yu-Gi-Oh! Karten-Scanner -> Cardmarket</title>
 <style>
   :root{
     --bg:#0f172a; --panel:#1e293b; --panel2:#334155;
@@ -14,24 +14,13 @@
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
-  body{max-width:560px; margin:0 auto; padding:12px 12px 40px;}
+  body{max-width:600px; margin:0 auto; padding:12px 12px 48px;}
   h1{font-size:1.25rem; margin:6px 0 2px; display:flex; align-items:center; gap:8px;}
-  h1 .logo{font-size:1.4rem}
-  .sub{color:var(--muted); font-size:.82rem; margin:0 0 12px;}
+  .sub{color:var(--muted); font-size:.82rem; margin:0 0 12px; line-height:1.4;}
+  .step{font-size:.72rem; color:var(--accent2); font-weight:700; letter-spacing:.03em;
+    text-transform:uppercase; margin:18px 0 6px;}
 
-  .camwrap{position:relative; width:100%; aspect-ratio:3/4; background:#000;
-    border-radius:14px; overflow:hidden; border:1px solid var(--line);}
-  video{width:100%; height:100%; object-fit:cover; display:block;}
-  .guide{position:absolute; left:6%; right:6%; border:2px dashed var(--accent);
-    border-radius:8px; pointer-events:none; box-shadow:0 0 0 9999px rgba(0,0,0,.28);}
-  .guide.name{top:4%; height:13%;}
-  .guide.code{bottom:6%; height:9%; left:40%; right:6%;}
-  .guide-label{position:absolute; background:var(--accent); color:#111; font-size:.68rem;
-    font-weight:700; padding:2px 6px; border-radius:5px; top:-10px; left:6px;}
-  .camhint{position:absolute; left:0; right:0; bottom:8px; text-align:center;
-    color:#e2e8f0; font-size:.72rem; text-shadow:0 1px 3px #000; pointer-events:none;}
-
-  .modes{display:flex; gap:8px; margin:12px 0;}
+  .modes{display:flex; gap:8px; margin:4px 0 2px;}
   .modes button{flex:1; padding:10px; border-radius:10px; border:1px solid var(--line);
     background:var(--panel); color:var(--text); font-weight:600; font-size:.9rem;}
   .modes button.active{background:var(--accent); color:#111; border-color:var(--accent);}
@@ -40,37 +29,62 @@
   .btn{flex:1; padding:14px; border-radius:12px; border:none; font-weight:700;
     font-size:1rem; background:var(--accent); color:#111;}
   .btn:active{transform:translateY(1px);}
-  .btn.sec{background:var(--panel2); color:var(--text); flex:0 0 auto; padding:14px 16px;}
-  .btn.photo{background:var(--panel2); color:var(--text);}
+  .btn.sec{background:var(--panel2); color:var(--text);}
+  .btn.ok{background:var(--ok); color:#04220f;}
   .btn:disabled{opacity:.5;}
   #fileInput{display:none;}
+
+  .camwrap{position:relative; width:100%; aspect-ratio:3/4; background:#000;
+    border-radius:14px; overflow:hidden; border:1px solid var(--line); margin-top:4px; display:none;}
+  video{width:100%; height:100%; object-fit:cover; display:block;}
+  .camhint{position:absolute; left:0; right:0; bottom:8px; text-align:center;
+    color:#e2e8f0; font-size:.72rem; text-shadow:0 1px 3px #000; pointer-events:none;}
+
+  /* Cropper */
+  #cropCard{display:none;}
+  .stage{position:relative; width:100%; background:#000; border-radius:12px; overflow:hidden;
+    border:1px solid var(--line); touch-action:none; user-select:none;}
+  .stage img{width:100%; display:block; pointer-events:none;}
+  .selbox{position:absolute; border:2px solid var(--accent); background:rgba(245,158,11,.12);
+    box-shadow:0 0 0 9999px rgba(0,0,0,.45); cursor:move;}
+  .handle{position:absolute; width:26px; height:26px; right:-13px; bottom:-13px;
+    background:var(--accent); border-radius:50%; border:2px solid #111; cursor:nwse-resize;}
+  .selhint{position:absolute; top:4px; left:6px; background:var(--accent); color:#111;
+    font-size:.66rem; font-weight:700; padding:1px 6px; border-radius:5px; pointer-events:none;}
 
   .status{margin-top:10px; font-size:.85rem; color:var(--muted); min-height:1.1em;}
   .bar{height:6px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-top:6px; display:none;}
   .bar>i{display:block; height:100%; width:0; background:var(--accent); transition:width .2s;}
 
-  .card{margin-top:14px; background:var(--panel); border:1px solid var(--line);
+  .card{margin-top:8px; background:var(--panel); border:1px solid var(--line);
     border-radius:14px; padding:14px; display:none;}
-  label.fld{display:block; font-size:.75rem; color:var(--muted); margin-bottom:4px;}
-  input[type=text]{width:100%; padding:12px; border-radius:10px; border:1px solid var(--line);
+  .previewRow{display:flex; gap:10px; align-items:center; margin-bottom:10px;}
+  .previewRow canvas{height:46px; width:auto; max-width:60%; border:1px solid var(--line);
+    border-radius:6px; background:#fff; display:block;}
+  .previewRow .raw{font-size:.72rem; color:var(--muted); flex:1; word-break:break-word;}
+
+  label.fld{display:block; font-size:.75rem; color:var(--muted); margin:6px 0 4px;}
+  .searchRow{display:flex; gap:8px;}
+  input[type=text]{flex:1; padding:12px; border-radius:10px; border:1px solid var(--line);
     background:var(--bg); color:var(--text); font-size:1.05rem;}
-  .rawline{font-size:.72rem; color:var(--muted); margin:6px 2px 0;}
+  .searchRow button{flex:0 0 auto; padding:12px 16px; border-radius:10px; border:none;
+    background:var(--accent2); color:#111; font-weight:700;}
 
   .candTitle{font-size:.78rem; color:var(--muted); margin:14px 0 6px;}
   .cand{display:flex; gap:10px; align-items:center; width:100%; text-align:left;
     background:var(--bg); border:1px solid var(--line); border-radius:10px;
     padding:8px; margin-bottom:8px; color:var(--text);}
-  .cand img{width:42px; height:auto; border-radius:4px; background:#000; flex:0 0 auto;}
+  .cand.selected{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset;}
+  .cand img{width:40px; height:auto; border-radius:4px; background:#000; flex:0 0 auto;}
   .cand .cinfo{flex:1; min-width:0;}
   .cand .cinfo b{display:block; font-size:.92rem; line-height:1.2;}
   .cand .cinfo span{font-size:.72rem; color:var(--muted);}
   .cand .score{font-size:.68rem; color:var(--accent2); font-weight:700; flex:0 0 auto;}
 
-  .cmbtn{display:block; text-align:center; text-decoration:none; margin-top:14px;
+  .cmbtn{display:block; text-align:center; text-decoration:none; margin-top:12px;
     padding:14px; border-radius:12px; background:var(--ok); color:#04220f; font-weight:800; font-size:1rem;}
-  .cmbtn.alt{background:var(--panel2); color:var(--text); margin-top:8px; font-weight:600;}
 
-  canvas{display:none;}
+  canvas.hidden{display:none;}
   .foot{margin-top:22px; font-size:.72rem; color:var(--muted); line-height:1.5;}
   .foot code{background:var(--panel2); padding:1px 5px; border-radius:4px;}
   .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
@@ -80,54 +94,71 @@
 </head>
 <body>
 
-<h1><span class="logo">🃏</span> Karten-Scanner</h1>
-<p class="sub">Karte scannen oder fotografieren → passende Karte antippen → auf Cardmarket suchen.</p>
-
-<div class="camwrap">
-  <video id="video" playsinline autoplay muted></video>
-  <div id="guide" class="guide name">
-    <span class="guide-label" id="guideLabel">Kartenname</span>
-  </div>
-  <div class="camhint" id="camhint">Kamera wird gestartet …</div>
-</div>
+<h1>🃏 Karten-Scanner</h1>
+<p class="sub">Foto machen &rarr; Rahmen ueber den Kartennamen ziehen &rarr; Text lesen &rarr; Karte antippen &rarr; auf Cardmarket suchen. Klappt es nicht: einfach unten den Namen tippen und &bdquo;Suchen&ldquo;.</p>
 
 <div class="modes">
-  <button id="mName" class="active" data-mode="name">🔤 Name (oben)</button>
-  <button id="mCode" data-mode="code">🔢 Set-Code (unten)</button>
+  <button id="mName" class="active">🔤 Name</button>
+  <button id="mCode">🔢 Set-Code</button>
 </div>
 
+<div class="step">1 &middot; Bild aufnehmen</div>
 <div class="row">
-  <button id="scanBtn" class="btn">📸 Live scannen</button>
-  <button id="switchBtn" class="btn sec" title="Kamera wechseln">🔄</button>
-</div>
-<div class="row">
-  <button id="photoBtn" class="btn photo">🖼️ Foto aufnehmen (schärfer)</button>
+  <button id="photoBtn" class="btn">🖼️ Foto / Datei</button>
+  <button id="camBtn" class="btn sec">📷 Kamera</button>
 </div>
 <input type="file" id="fileInput" accept="image/*" capture="environment">
+
+<div class="camwrap" id="camwrap">
+  <video id="video" playsinline autoplay muted></video>
+  <div class="camhint">Karte formatfuellend ausrichten</div>
+</div>
+<div class="row" id="camRow" style="display:none">
+  <button id="snapBtn" class="btn ok">📸 Aufnehmen</button>
+  <button id="switchBtn" class="btn sec" style="flex:0 0 auto">🔄</button>
+</div>
+
+<div class="card" id="cropCard">
+  <div class="step" style="margin-top:2px">2 &middot; Namen markieren</div>
+  <div class="stage" id="stage">
+    <img id="cropImage" alt="">
+    <div class="selbox" id="selbox"><span class="selhint" id="selhint">Name</span><div class="handle" id="handle"></div></div>
+  </div>
+  <div class="row">
+    <button id="readBtn" class="btn">🔍 Text lesen</button>
+  </div>
+</div>
 
 <div class="status" id="status"></div>
 <div class="bar" id="bar"><i></i></div>
 
 <div class="card" id="result">
-  <label class="fld" for="text">Suchbegriff (antippbarer Treffer setzt ihn automatisch):</label>
-  <input type="text" id="text" autocomplete="off" autocapitalize="off" spellcheck="false">
-  <div class="rawline" id="rawline"></div>
+  <div class="step" style="margin-top:2px">3 &middot; Ergebnis</div>
+  <div class="previewRow">
+    <canvas id="preview"></canvas>
+    <div class="raw" id="rawline"></div>
+  </div>
+
+  <label class="fld" for="text">Suchbegriff (tippen &amp; Suchen, oder Treffer antippen):</label>
+  <div class="searchRow">
+    <input type="text" id="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="z.B. Sacred Beasts">
+    <button id="searchBtn">Suchen</button>
+  </div>
 
   <div id="candWrap" style="display:none">
-    <div class="candTitle">Passt eine dieser Karten? Zum Übernehmen antippen:</div>
+    <div class="candTitle">Passende Karten &ndash; zum Uebernehmen antippen:</div>
     <div id="cands"></div>
   </div>
 
   <a class="cmbtn" id="cmLink" target="_blank" rel="noopener">🛒 Auf Cardmarket suchen</a>
 </div>
 
-<canvas id="canvas"></canvas>
+<canvas id="work" class="hidden"></canvas>
 
 <p class="foot">
-  <b>Tipp:</b> Für den Namen ist „🖼️ Foto aufnehmen" meist deutlich zuverlässiger als das Live-Bild.
-  Der erkannte Text wird mit der Kartendatenbank von
+  Text wird mit der Kartendatenbank von
   <a style="color:var(--accent2)" href="https://ygoprodeck.com" target="_blank" rel="noopener">YGOPRODeck</a>
-  abgeglichen – auch bei Lesefehlern. Der Link geht auf <code>cardmarket.com/de</code> (Zielseite von cardmarket.ch).
+  abgeglichen &ndash; auch bei Lesefehlern. Der Link geht auf <code>cardmarket.com/de</code> (Zielseite von cardmarket.ch).
 </p>
 
 <div class="toast" id="toast"></div>
@@ -135,27 +166,60 @@
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script>
 const $ = id => document.getElementById(id);
-const video=$("video"), canvas=$("canvas"), ctx=canvas.getContext("2d",{willReadFrequently:true});
-const guide=$("guide"), guideLabel=$("guideLabel"), camhint=$("camhint");
+const video=$("video"), camwrap=$("camwrap"), camRow=$("camRow");
 const statusEl=$("status"), bar=$("bar"), barI=bar.querySelector("i");
-const result=$("result"), textInput=$("text"), rawline=$("rawline");
-const candWrap=$("candWrap"), cands=$("cands");
-const cmLink=$("cmLink"), toast=$("toast"), fileInput=$("fileInput");
-
-let mode="name";
-let stream=null, useBackCam=true;
-let worker=null, workerReady=false;
+const cropCard=$("cropCard"), stage=$("stage"), cropImage=$("cropImage");
+const selbox=$("selbox"), handle=$("handle"), selhint=$("selhint");
+const result=$("result"), preview=$("preview"), rawline=$("rawline");
+const textInput=$("text"), candWrap=$("candWrap"), cands=$("cands"), cmLink=$("cmLink");
+const fileInput=$("fileInput"), toast=$("toast");
+const work=$("work"), wctx=work.getContext("2d",{willReadFrequently:true});
+const pctx=preview.getContext("2d");
 
 const CM_BASE="https://www.cardmarket.com/de/YuGiOh/Products/Search?searchString=";
 const SETCODE_RE=/\b([A-Z0-9]{2,5})-([A-Z]{1,3})?(\d{2,3})\b/;
 
+let mode="name";
+let stream=null, useBackCam=true;
+let worker=null, workerReady=false;
+let imgLoaded=false;
+// Auswahl-Rechteck als Anteile (0..1) des Bildes
+let sel={x:0.08,y:0.05,w:0.84,h:0.11};
+
 function say(m){ statusEl.textContent=m||""; }
 function showToast(m){ toast.textContent=m; toast.style.display="block";
-  clearTimeout(toast._t); toast._t=setTimeout(()=>toast.style.display="none",3800); }
+  clearTimeout(toast._t); toast._t=setTimeout(()=>toast.style.display="none",4200); }
 function prog(p){ bar.style.display="block"; barI.style.width=p+"%"; }
 function progDone(){ bar.style.display="none"; barI.style.width="0"; }
 
-/* ---------------- Kamera ---------------- */
+/* ---------- Modus ---------- */
+function setMode(m){
+  mode=m;
+  $("mName").classList.toggle("active",m==="name");
+  $("mCode").classList.toggle("active",m==="code");
+  selhint.textContent = m==="name"?"Name":"Set-Code";
+  sel = m==="name" ? {x:0.08,y:0.05,w:0.84,h:0.11} : {x:0.42,y:0.86,w:0.52,h:0.08};
+  layoutSel();
+}
+$("mName").onclick=()=>setMode("name");
+$("mCode").onclick=()=>setMode("code");
+
+/* ---------- OCR laden ---------- */
+async function initOCR(){
+  if(worker) return;
+  say("Texterkennung wird geladen (einmalig) ..."); prog(15);
+  worker=await Tesseract.createWorker(["eng","deu"],1,{
+    logger:m=>{ if(m.status==="recognizing text") prog(20+m.progress*70); }
+  });
+  workerReady=true; progDone(); say("Bereit.");
+}
+
+/* ---------- Kamera ---------- */
+$("camBtn").onclick=async ()=>{
+  initOCR();
+  camwrap.style.display="block"; camRow.style.display="flex";
+  await startCam();
+};
 async function startCam(){
   if(stream) stream.getTracks().forEach(t=>t.stop());
   try{
@@ -163,172 +227,181 @@ async function startCam(){
       video:{ facingMode:useBackCam?{ideal:"environment"}:"user",
               width:{ideal:1920}, height:{ideal:1080} }, audio:false });
     video.srcObject=stream; await video.play();
-    camhint.textContent="Karte im Rahmen ausrichten";
   }catch(e){
-    camhint.textContent="Kamera nicht verfügbar";
-    showToast("Kamera-Zugriff noetig: Seite ueber HTTPS oeffnen und Kamera erlauben. Du kannst trotzdem den Foto-Modus nutzen.");
+    showToast("Kamera nicht verfuegbar. Bitte HTTPS + Kamera erlauben, oder Foto/Datei nutzen.");
     console.error(e);
   }
 }
 $("switchBtn").onclick=()=>{ useBackCam=!useBackCam; startCam(); };
+$("snapBtn").onclick=()=>{
+  const vw=video.videoWidth, vh=video.videoHeight;
+  if(!vw){ showToast("Kamera noch nicht bereit."); return; }
+  const c=document.createElement("canvas"); c.width=vw; c.height=vh;
+  c.getContext("2d").drawImage(video,0,0);
+  loadIntoCropper(c.toDataURL("image/jpeg",0.95));
+  camwrap.style.display="none"; camRow.style.display="none";
+  if(stream) stream.getTracks().forEach(t=>t.stop());
+};
 
-/* ---------------- OCR-Worker ---------------- */
-async function initOCR(){
-  say("Texterkennung wird geladen … (einmalig)"); prog(15);
-  worker=await Tesseract.createWorker(["eng","deu"],1,{
-    logger:m=>{ if(m.status==="recognizing text") prog(20+m.progress*80); }
-  });
-  workerReady=true; progDone(); say("Bereit.");
+/* ---------- Foto / Datei ---------- */
+$("photoBtn").onclick=()=>{ initOCR(); fileInput.click(); };
+fileInput.onchange=e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  loadIntoCropper(URL.createObjectURL(f));
+  fileInput.value="";
+};
+
+function loadIntoCropper(src){
+  imgLoaded=false;
+  cropImage.onload=()=>{ imgLoaded=true; cropCard.style.display="block"; setMode(mode); layoutSel();
+    cropCard.scrollIntoView({behavior:"smooth",block:"center"});
+    say("Ziehe den Rahmen ueber den Namen, dann 'Text lesen'."); };
+  cropImage.src=src;
 }
 
-/* ---------------- Modus ---------------- */
-function setMode(m){
-  mode=m;
-  $("mName").classList.toggle("active",m==="name");
-  $("mCode").classList.toggle("active",m==="code");
-  guide.className="guide "+m;
-  guideLabel.textContent=m==="name"?"Kartenname":"Set-Code";
+/* ---------- Auswahl-Rechteck (Drag + Resize, touch-faehig) ---------- */
+function layoutSel(){
+  selbox.style.left=(sel.x*100)+"%";
+  selbox.style.top=(sel.y*100)+"%";
+  selbox.style.width=(sel.w*100)+"%";
+  selbox.style.height=(sel.h*100)+"%";
 }
-$("mName").onclick=()=>setMode("name");
-$("mCode").onclick=()=>setMode("code");
+let drag=null;
+function stageRect(){ return stage.getBoundingClientRect(); }
+function pt(e){ const t=e.touches?e.touches[0]:e; return {x:t.clientX,y:t.clientY}; }
 
-/* ---------------- Bild vorbereiten (Graustufen + Kontrast) ---------------- */
-function preprocess(){
-  const img=ctx.getImageData(0,0,canvas.width,canvas.height), d=img.data;
-  // Mittelwert für optionale Invertierung (helle Schrift auf dunklem Balken)
-  let sum=0;
-  for(let i=0;i<d.length;i+=4){ const v=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2]; d[i]=d[i+1]=d[i+2]=v; sum+=v; }
-  const mean=sum/(d.length/4);
-  const invert = mean<120; // dunkler Hintergrund -> invertieren, damit Text dunkel wird
+selbox.addEventListener("pointerdown",e=>{
+  if(e.target===handle) return;
+  e.preventDefault();
+  const p=pt(e); drag={mode:"move",px:p.x,py:p.y,sx:sel.x,sy:sel.y};
+  selbox.setPointerCapture(e.pointerId);
+});
+handle.addEventListener("pointerdown",e=>{
+  e.preventDefault(); e.stopPropagation();
+  const p=pt(e); drag={mode:"resize",px:p.x,py:p.y,sw:sel.w,sh:sel.h};
+  handle.setPointerCapture(e.pointerId);
+});
+function onMove(e){
+  if(!drag) return;
+  const r=stageRect(), p=pt(e);
+  const dx=(p.x-drag.px)/r.width, dy=(p.y-drag.py)/r.height;
+  if(drag.mode==="move"){
+    sel.x=Math.min(Math.max(0,drag.sx+dx),1-sel.w);
+    sel.y=Math.min(Math.max(0,drag.sy+dy),1-sel.h);
+  }else{
+    sel.w=Math.min(Math.max(0.06,drag.sw+dx),1-sel.x);
+    sel.h=Math.min(Math.max(0.03,drag.sh+dy),1-sel.y);
+  }
+  layoutSel();
+}
+document.addEventListener("pointermove",onMove);
+document.addEventListener("pointerup",()=>{ drag=null; });
+
+/* ---------- Bildausschnitt vorbereiten ---------- */
+function buildCrop(invert){
+  const iw=cropImage.naturalWidth, ih=cropImage.naturalHeight;
+  const sx=sel.x*iw, sy=sel.y*ih, sw=sel.w*iw, sh=sel.h*ih;
+  // Zielhoehe ~ 90px Textzeile -> Skalierung
+  const targetH=Math.max(90, sh);
+  const scale=Math.min(4, Math.max(1.5, targetH/sh * (sh<160?2.2:1.4)));
+  work.width=Math.round(sw*scale); work.height=Math.round(sh*scale);
+  wctx.drawImage(cropImage, sx,sy,sw,sh, 0,0,work.width,work.height);
+  const img=wctx.getImageData(0,0,work.width,work.height), d=img.data;
   for(let i=0;i<d.length;i+=4){
-    let v=d[i];
-    v=(v-128)*1.6+128;            // Kontrast
+    let v=0.3*d[i]+0.59*d[i+1]+0.11*d[i+2];
+    v=(v-128)*1.5+128;                 // Kontrast
     if(invert) v=255-v;
     v=Math.max(0,Math.min(255,v));
     d[i]=d[i+1]=d[i+2]=v;
   }
-  ctx.putImageData(img,0,0);
+  wctx.putImageData(img,0,0);
+  return {w:work.width,h:work.height};
+}
+function showPreview(){
+  const s=Math.min(1, 300/work.width);
+  preview.width=work.width*s; preview.height=work.height*s;
+  pctx.drawImage(work,0,0,preview.width,preview.height);
 }
 
-/* Ausschnitt aus dem Live-Video (entspricht dem Guide-Rahmen) */
-function grabFromVideo(){
-  const vw=video.videoWidth, vh=video.videoHeight;
-  if(!vw||!vh) return false;
-  const g = mode==="name" ? {l:.06,t:.04,w:.88,h:.13} : {l:.40,t:.85,w:.54,h:.09};
-  drawCrop(video, vw,vh, g); return true;
+/* ---------- OCR ---------- */
+async function ocrOnce(){
+  const psm = "7"; // eine Textzeile
+  await worker.setParameters(mode==="code"
+    ? { tessedit_pageseg_mode:psm, tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" }
+    : { tessedit_pageseg_mode:psm, tessedit_char_whitelist:"" });
+  const {data}=await worker.recognize(work);
+  return {text:(data.text||"").replace(/\s+/g," ").trim(), conf:data.confidence||0};
 }
-/* Ausschnitt aus einem fertigen Foto (Karte füllt das Bild) */
-function grabFromImage(im){
-  const iw=im.naturalWidth, ih=im.naturalHeight;
-  const g = mode==="name" ? {l:.04,t:.03,w:.92,h:.13} : {l:.38,t:.88,w:.58,h:.08};
-  drawCrop(im, iw,ih, g);
-}
-function drawCrop(src, w, h, g){
-  const sx=g.l*w, sy=g.t*h, sw=g.w*w, sh=g.h*h, scale=3;
-  canvas.width=sw*scale; canvas.height=sh*scale;
-  ctx.drawImage(src, sx,sy,sw,sh, 0,0,canvas.width,canvas.height);
-  preprocess();
+function score(r){ // mehr Buchstaben + Konfidenz = besser
+  const letters=(r.text.match(/[A-Za-z0-9]/g)||[]).length;
+  return letters*2 + r.conf;
 }
 
-/* ---------------- OCR ausführen ---------------- */
-async function runOCR(){
-  const cfg = mode==="code"
-    ? { tessedit_char_whitelist:"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-" } : {};
-  await worker.setParameters(cfg);
-  let raw="";
-  try{ raw=(await worker.recognize(canvas)).data.text; }
-  catch(e){ showToast("Erkennung fehlgeschlagen."); console.error(e); }
-  return (raw||"").replace(/\s+/g," ").trim();
-}
+$("readBtn").onclick=async ()=>{
+  if(!imgLoaded){ showToast("Erst ein Bild aufnehmen."); return; }
+  if(!workerReady){ showToast("OCR laedt noch - kurz warten."); return; }
+  say("Lese Text ..."); prog(20);
 
-/* Live scannen */
-$("scanBtn").onclick=async ()=>{
-  if(!workerReady){ showToast("OCR lädt noch – kurz warten."); return; }
-  if(!grabFromVideo()){ showToast("Kamera noch nicht bereit."); return; }
-  say("Lese Text …"); prog(20);
-  const raw=await runOCR(); progDone();
-  await handleResult(raw);
+  buildCrop(false); showPreview();
+  let best=await ocrOnce();
+  // zweiter Versuch invertiert
+  buildCrop(true);
+  const alt=await ocrOnce();
+  if(score(alt)>score(best)){ best=alt; showPreview(); }
+  else { buildCrop(false); showPreview(); }
+
+  progDone();
+  await handleResult(best.text);
 };
 
-/* Foto aufnehmen / auswählen */
-$("photoBtn").onclick=()=>{ if(!workerReady){showToast("OCR lädt noch – kurz warten.");return;} fileInput.click(); };
-fileInput.onchange=e=>{
-  const f=e.target.files&&e.target.files[0]; if(!f) return;
-  const im=new Image();
-  im.onload=async ()=>{
-    say("Lese Text …"); prog(20);
-    grabFromImage(im);
-    const raw=await runOCR(); progDone();
-    URL.revokeObjectURL(im.src);
-    await handleResult(raw);
-  };
-  im.src=URL.createObjectURL(f);
-  fileInput.value="";
-};
+/* ---------- Ergebnis ---------- */
+function cleanName(s){ return s.replace(/[^A-Za-z0-9'\-,. ]/g," ").replace(/\s+/g," ").trim(); }
 
-/* ---------------- Ergebnis verarbeiten ---------------- */
-function cleanName(s){
-  return s.replace(/[^A-Za-zÄÖÜäöüß0-9'’,.\- ]/g," ").replace(/\s+/g," ").trim();
-}
 async function handleResult(raw){
   result.style.display="block"; candWrap.style.display="none"; cands.innerHTML="";
-  rawline.textContent = raw ? ("Rohtext: „"+raw+"“") : "Kein Text erkannt.";
+  rawline.textContent = raw ? ("Gelesen: "+raw) : "Kein Text erkannt - Rahmen anpassen oder unten tippen.";
+  result.scrollIntoView({behavior:"smooth",block:"nearest"});
 
   if(mode==="code"){
     const up=raw.toUpperCase().replace(/[^A-Z0-9\- ]/g,"");
     const m=up.match(SETCODE_RE);
     const val=m?m[0]:up.trim();
     textInput.value=val; buildLink(val);
-    say(m?"Set-Code erkannt.":"Kein klares Muster – bitte prüfen/korrigieren.");
+    say(m?"Set-Code erkannt.":"Kein klares Muster - bitte pruefen oder Name-Modus nutzen.");
     return;
   }
-
   const val=cleanName(raw);
   textInput.value=val; buildLink(val);
-  if(val.length<3){ say("Zu wenig erkannt – bitte erneut oder Foto verwenden."); return; }
-  say("Suche passende Karten …");
-  await findCandidates(val);
+  if(val.replace(/[^A-Za-z]/g,"").length<3){ say("Zu wenig erkannt - Rahmen enger ziehen oder unten Namen tippen."); return; }
+  await search(val,true);
 }
 
-/* ---------------- Kandidaten über YGOPRODeck (fuzzy) ---------------- */
-function lev(a,b){
-  const m=a.length,n=b.length; if(!m) return n; if(!n) return m;
-  const dp=Array.from({length:m+1},(_,i)=>i);
-  for(let j=1;j<=n;j++){
-    let prev=dp[0]; dp[0]=j;
-    for(let i=1;i<=m;i++){
-      const tmp=dp[i];
-      dp[i]=Math.min(dp[i]+1, dp[i-1]+1, prev+(a[i-1]===b[j-1]?0:1));
-      prev=tmp;
-    }
-  }
-  return dp[m];
-}
+/* ---------- Fuzzy-Suche ---------- */
+function lev(a,b){ const m=a.length,n=b.length; if(!m)return n; if(!n)return m;
+  const dp=[...Array(m+1).keys()];
+  for(let j=1;j<=n;j++){ let prev=dp[0]; dp[0]=j;
+    for(let i=1;i<=m;i++){ const t=dp[i]; dp[i]=Math.min(dp[i]+1,dp[i-1]+1,prev+(a[i-1]===b[j-1]?0:1)); prev=t; } }
+  return dp[m]; }
 const norm=s=>s.toLowerCase().replace(/[^a-z0-9]/g,"");
-function similarity(a,b){
-  a=norm(a); b=norm(b); if(!a||!b) return 0;
-  const d=lev(a,b); let s=1-d/Math.max(a.length,b.length);
-  if(b.includes(a)||a.includes(b)) s=Math.max(s,.75);   // Teilstring-Bonus
-  return s;
-}
+function similarity(a,b){ a=norm(a); b=norm(b); if(!a||!b) return 0;
+  let s=1-lev(a,b)/Math.max(a.length,b.length);
+  if(b.includes(a)||a.includes(b)) s=Math.max(s,.72);
+  return s; }
 
 async function fnameSearch(q){
-  try{
-    const r=await fetch("https://db.ygoprodeck.com/api/v7/cardinfo.php?fname="+encodeURIComponent(q)+"&num=25&offset=0");
-    if(!r.ok) return [];
-    const j=await r.json(); return j.data||[];
-  }catch(_){ return []; }
-}
+  try{ const r=await fetch("https://db.ygoprodeck.com/api/v7/cardinfo.php?fname="+encodeURIComponent(q)+"&num=25&offset=0");
+    if(!r.ok) return []; const j=await r.json(); return j.data||[];
+  }catch(_){ return []; } }
 
-async function findCandidates(ocr){
-  const cleaned=cleanName(ocr);
-  const words=cleaned.split(/\s+/).filter(w=>w.length>=4);
+async function search(query,fromOCR){
+  const cleaned=cleanName(query);
+  if(cleaned.length<2){ showToast("Bitte mehr Text eingeben."); return; }
+  say("Suche passende Karten ...");
+  const words=cleaned.split(/\s+/).filter(w=>w.length>=3);
   const queries=[];
-  if(cleaned.length>=4 && cleaned.length<=40) queries.push(cleaned);
-  for(let i=0;i<words.length;i++){
-    if(i+1<words.length) queries.push(words[i]+" "+words[i+1]); // Wortpaare
-  }
-  words.forEach(w=>queries.push(w));                              // Einzelwörter
+  if(cleaned.length<=40) queries.push(cleaned);
+  for(let i=0;i<words.length-1;i++) queries.push(words[i]+" "+words[i+1]);
+  words.forEach(w=>queries.push(w));
 
   const seen=new Set(), pool=[];
   for(const q of [...new Set(queries)]){
@@ -336,58 +409,44 @@ async function findCandidates(ocr){
     for(const c of res){ if(!seen.has(c.id)){ seen.add(c.id); pool.push(c); } }
     if(pool.length>=120) break;
   }
-
-  if(!pool.length){
-    say("Keine Treffer gefunden – Suchbegriff ggf. korrigieren.");
-    candWrap.style.display="none"; return;
-  }
+  if(!pool.length){ say("Keine Treffer - Schreibweise pruefen."); candWrap.style.display="none"; return; }
 
   pool.forEach(c=>c._s=similarity(cleaned,c.name));
   pool.sort((a,b)=>b._s-a._s);
   const top=pool.slice(0,6);
-
   renderCandidates(top);
-  // besten Treffer direkt übernehmen, wenn deutlich
-  if(top[0] && top[0]._s>=0.55){ pick(top[0]); say("Bester Treffer übernommen – bei Bedarf anderen antippen."); }
-  else say("Bitte passende Karte antippen (oder Text korrigieren).");
+  if(fromOCR && top[0] && top[0]._s>=0.5){ pick(top[0],0); say("Bester Treffer uebernommen - sonst anderen antippen."); }
+  else say("Bitte passende Karte antippen.");
 }
+$("searchBtn").onclick=()=>search(textInput.value,false);
+textInput.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); search(textInput.value,false); } });
 
 function renderCandidates(list){
   cands.innerHTML="";
-  list.forEach(c=>{
+  list.forEach((c,idx)=>{
     const el=document.createElement("button");
     el.className="cand";
-    const img=c.card_images?.[0]?.image_url_small||"";
-    el.innerHTML=`<img src="${img}" alt="" loading="lazy">
-      <div class="cinfo"><b></b><span></span></div>
-      <div class="score">${Math.round(c._s*100)}%</div>`;
+    const img=c.card_images&&c.card_images[0]?c.card_images[0].image_url_small:"";
+    el.innerHTML='<img alt="" loading="lazy"><div class="cinfo"><b></b><span></span></div><div class="score">'+Math.round(c._s*100)+'%</div>';
+    el.querySelector("img").src=img;
     el.querySelector("b").textContent=c.name;
-    el.querySelector("span").textContent=(c.type||"")+(c.race?" · "+c.race:"");
-    el.onclick=()=>pick(c);
+    el.querySelector("span").textContent=(c.type||"")+(c.race?" - "+c.race:"");
+    el.onclick=()=>pick(c,idx);
     cands.appendChild(el);
   });
   candWrap.style.display="block";
 }
-
-function pick(c){
+function pick(c,idx){
   textInput.value=c.name; buildLink(c.name);
-  [...cands.children].forEach(ch=>ch.style.outline="");
+  [...cands.children].forEach((ch,i)=>ch.classList.toggle("selected",i===idx));
 }
 
-/* ---------------- Cardmarket-Link ---------------- */
-function buildLink(q){
-  q=(q||"").trim();
+/* ---------- Cardmarket ---------- */
+function buildLink(q){ q=(q||"").trim();
   cmLink.href=CM_BASE+encodeURIComponent(q);
-  cmLink.textContent="🛒 „"+(q.length>30?q.slice(0,30)+"…":q)+"“ auf Cardmarket suchen";
-}
+  cmLink.textContent="🛒 \""+(q.length>30?q.slice(0,30)+"...":q)+"\" auf Cardmarket suchen"; }
 textInput.addEventListener("input",()=>buildLink(textInput.value));
 
-/* ---------------- Start ---------------- */
-(async function(){
-  if(!navigator.mediaDevices?.getUserMedia) showToast("Browser ohne Kamera-API - bitte den Foto-Modus nutzen.");
-  await startCam();
-  initOCR();
-})();
-</script>
-</body>
-</html>
+/* ---------- Start ---------- */
+setMode("name");
+initOCR();
