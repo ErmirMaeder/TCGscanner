@@ -219,7 +219,10 @@
   </div>
   <a class="cmbtn" id="cmLink" target="_blank" rel="noopener">🛒 Auf Cardmarket suchen</a>
   <div id="linkinfo" style="font-size:.66rem;color:var(--muted);margin-top:6px;word-break:break-all"></div>
-  <div id="setInfo" style="font-size:.82rem;color:var(--accent2);font-weight:700;margin-top:12px;display:none"></div>
+  <label class="fld" id="setLbl" for="setInput" style="display:none">Set-Code (falls falsch gelesen, hier korrigieren):</label>
+  <div class="searchRow" id="setRow" style="display:none">
+    <input type="text" id="setInput" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="z.B. CORI-DE061">
+  </div>
   <a class="cmbtn" id="cmSetLink" target="_blank" rel="noopener" style="display:none;background:var(--panel2);color:var(--accent);margin-top:8px">🔎 Set-Code</a>
   <div id="setLinkInfo" style="font-size:.66rem;color:var(--muted);margin-top:6px;word-break:break-all"></div>
 </div>
@@ -363,7 +366,7 @@ function identify(dataUrl){
   var key=getKey();
   result.style.display="block"; found.style.display="none"; candWrap.style.display="none"; cands.innerHTML="";
   pricesBox.style.display="none"; countryLinks.style.display="none";
-  lastSetCode=""; $("setInfo").style.display="none"; $("cmSetLink").style.display="none"; $("setLinkInfo").textContent="";
+  lastSetCode=""; $("setLbl").style.display="none"; $("setRow").style.display="none"; $("cmSetLink").style.display="none"; $("setLinkInfo").textContent=""; $("setInput").value="";
   shot.style.display="block"; shot.src=dataUrl;
   cmLink.href="#"; cmLink.textContent="🛒 Auf Cardmarket suchen";
   textInput.value="";
@@ -556,16 +559,23 @@ function buildLink(q, exact){ q=(q||"").trim();
   cmLink.textContent='🛒 "'+(q.length>28?q.slice(0,28)+"...":q)+'" auf Cardmarket'+(exact?" öffnen":" suchen");
   var li=$("linkinfo"); if(li) li.textContent=url; }
 
-function renderSetLink(card, setCode){
-  var info=$("setInfo"), el=$("cmSetLink"), sli=$("setLinkInfo");
-  setCode=(setCode||"").trim().toUpperCase();
-  if(!setCode){ info.style.display="none"; el.style.display="none"; sli.textContent=""; return; }
-  info.textContent="Set-Code: "+setCode; info.style.display="block";
+function buildSetLink(code){
+  var el=$("cmSetLink"), sli=$("setLinkInfo");
+  code=(code||"").trim().toUpperCase();
+  if(!code){ el.style.display="none"; sli.textContent=""; return; }
   // Google-Suche "cardmarket <Set-Code>" mit + statt %20 (iOS/Google-App verschluckt %20)
-  var url="https://www.google.com/search?q=cardmarket+"+encodeURIComponent(setCode).replace(/%20/g,"+");
-  el.href=url; el.textContent="🔎 "+setCode+" bei Cardmarket finden";
+  var url="https://www.google.com/search?q=cardmarket+"+encodeURIComponent(code).replace(/%20/g,"+");
+  el.href=url; el.textContent="🔎 "+code+" bei Cardmarket finden";
   el.style.display="block"; sli.textContent=url;
 }
+function renderSetLink(card, setCode){
+  setCode=(setCode||"").trim().toUpperCase();
+  var lbl=$("setLbl"), row=$("setRow"), inp=$("setInput");
+  if(!setCode){ lbl.style.display="none"; row.style.display="none"; $("cmSetLink").style.display="none"; $("setLinkInfo").textContent=""; return; }
+  lbl.style.display="block"; row.style.display="flex"; inp.value=setCode;
+  buildSetLink(setCode);
+}
+$("setInput").addEventListener("input",function(){ buildSetLink(this.value); });
 
 /* Start */
 refreshKeyState();
