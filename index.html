@@ -82,6 +82,17 @@
   .cand .score{font-size:.68rem; color:var(--accent2); font-weight:700;}
   .cmbtn{display:block; text-align:center; text-decoration:none; margin-top:14px;
     padding:15px; border-radius:12px; background:var(--ok); color:#04220f; font-weight:800; font-size:1.05rem;}
+  .prices{margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;}
+  .price{flex:1; min-width:120px; background:var(--bg); border:1px solid var(--line);
+    border-radius:10px; padding:10px 12px;}
+  .price .pl{font-size:.7rem; color:var(--muted);}
+  .price .pv{font-size:1.15rem; font-weight:800; color:var(--accent2);}
+  .ctrylinks{margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;}
+  .ctrylinks a{flex:1; min-width:130px; text-align:center; text-decoration:none;
+    background:var(--panel2); color:var(--text); border:1px solid var(--line);
+    border-radius:10px; padding:11px; font-weight:700; font-size:.9rem;}
+  .ctryitem{display:flex; align-items:center; gap:8px; padding:7px 4px; font-size:.92rem;}
+  .ctryitem input{width:20px; height:20px;}
   canvas.hidden{display:none;}
   .foot{margin-top:22px; font-size:.72rem; color:var(--muted); line-height:1.5;}
   .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
@@ -117,8 +128,17 @@
     <input type="password" id="apikey" placeholder="sk-..." autocomplete="off" spellcheck="false">
     <div class="krow">
       <button id="saveKey" type="button">Speichern</button>
-      <span id="keyInfo" class="keystate no">Wird nur auf deinem Gerät gespeichert.</span>
+      <button id="delKey" type="button" style="background:var(--err);color:#fff">🗑️ Löschen</button>
     </div>
+    <div class="keystate no" style="margin-top:6px">Wird nur auf diesem Gerät gespeichert.</div>
+  </div>
+</details>
+
+<details class="keybox" id="ctrybox">
+  <summary style="cursor:pointer;color:var(--accent2);font-weight:700">🌍 Länder auswählen</summary>
+  <div style="margin-top:8px">
+    <div style="font-size:.78rem;color:var(--muted);margin-bottom:8px">Für welche Länder möchtest du Cardmarket-Links sehen?</div>
+    <div id="ctryList"></div>
   </div>
 </details>
 
@@ -148,6 +168,8 @@
     <img id="foundImg" alt="">
     <div class="fi"><b id="foundName"></b><span id="foundMeta"></span></div>
   </div>
+  <div id="prices" class="prices" style="display:none"></div>
+  <div id="countryLinks" class="ctrylinks" style="display:none"></div>
   <label class="fld" for="text">Name (falls die KI daneben lag, korrigieren und Suchen):</label>
   <div class="searchRow">
     <input type="text" id="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Kartenname">
@@ -180,7 +202,38 @@ var result=$("result"), shot=$("shot");
 var found=$("found"), foundImg=$("foundImg"), foundName=$("foundName"), foundMeta=$("foundMeta");
 var textInput=$("text"), candWrap=$("candWrap"), cands=$("cands"), cmLink=$("cmLink");
 var fileInput=$("fileInput"), toast=$("toast");
+var pricesBox=$("prices"), countryLinks=$("countryLinks");
 var work=$("work"), wctx=work.getContext("2d");
+
+/* ---------- Länder ---------- */
+var COUNTRIES=[
+  {code:"DE", name:"Deutschland", lang:"de"},
+  {code:"CH", name:"Schweiz",     lang:"de"},
+  {code:"AT", name:"Österreich",  lang:"de"},
+  {code:"FR", name:"Frankreich",  lang:"fr"},
+  {code:"IT", name:"Italien",     lang:"it"},
+  {code:"ES", name:"Spanien",     lang:"es"},
+  {code:"GB", name:"UK",          lang:"en"},
+  {code:"NL", name:"Niederlande", lang:"en"}
+];
+function getCountries(){ try{ var s=localStorage.getItem("countries"); return s?JSON.parse(s):["DE","CH"]; }catch(e){ return ["DE","CH"]; } }
+function setCountries(a){ try{ localStorage.setItem("countries",JSON.stringify(a)); }catch(e){} }
+function renderCtryList(){
+  var sel=getCountries(), host=$("ctryList"); host.innerHTML="";
+  COUNTRIES.forEach(function(c){
+    var lab=document.createElement("label"); lab.className="ctryitem";
+    var chk=sel.indexOf(c.code)>=0?" checked":"";
+    lab.innerHTML='<input type="checkbox" value="'+c.code+'"'+chk+'> '+c.name;
+    lab.querySelector("input").onchange=function(){
+      var cur=getCountries();
+      if(this.checked){ if(cur.indexOf(c.code)<0) cur.push(c.code); }
+      else { cur=cur.filter(function(x){return x!==c.code;}); }
+      setCountries(cur);
+      if(textInput.value) renderCountryLinks(textInput.value);
+    };
+    host.appendChild(lab);
+  });
+}
 
 var stream=null, useBackCam=true;
 
@@ -201,6 +254,12 @@ $("saveKey").onclick=function(){
   try{ if(v) localStorage.setItem("openai_key",v); else localStorage.removeItem("openai_key"); }catch(e){}
   refreshKeyState();
   if(v){ $("keybox").open=false; showToast("Schlüssel gespeichert ✓ – du kannst jetzt scannen."); }
+};
+$("delKey").onclick=function(){
+  try{ localStorage.removeItem("openai_key"); }catch(e){}
+  $("apikey").value="";
+  refreshKeyState();
+  showToast("Schlüssel vom Gerät gelöscht 🗑️");
 };
 (function(){ try{ var k=localStorage.getItem("openai_key"); if(k) $("apikey").value=k; }catch(e){} })();
 
@@ -254,6 +313,7 @@ var PROMPT="You are an expert on the Yu-Gi-Oh! Trading Card Game. The image show
 function identify(dataUrl){
   var key=getKey();
   result.style.display="block"; found.style.display="none"; candWrap.style.display="none"; cands.innerHTML="";
+  pricesBox.style.display="none"; countryLinks.style.display="none";
   shot.style.display="block"; shot.src=dataUrl;
   cmLink.href="#"; cmLink.textContent="🛒 Auf Cardmarket suchen";
   textInput.value="";
@@ -340,6 +400,36 @@ function showFound(c){
   foundImg.src=(c.card_images&&c.card_images[0])?c.card_images[0].image_url_small:"";
   foundName.textContent=c.name;
   foundMeta.textContent=(c.type||"")+(c.race?(" - "+c.race):"");
+  renderPrices(c);
+  renderCountryLinks(c.name);
+}
+function renderPrices(c){
+  var p=(c.card_prices&&c.card_prices[0])?c.card_prices[0]:null;
+  pricesBox.innerHTML="";
+  if(!p){ pricesBox.style.display="none"; return; }
+  var cm=parseFloat(p.cardmarket_price||"0"), tp=parseFloat(p.tcgplayer_price||"0");
+  var html="";
+  if(cm>0) html+='<div class="price"><div class="pl">Cardmarket (Referenz)</div><div class="pv">€ '+cm.toFixed(2)+'</div></div>';
+  if(tp>0) html+='<div class="price"><div class="pl">TCGplayer</div><div class="pv">$ '+tp.toFixed(2)+'</div></div>';
+  if(!html){ pricesBox.style.display="none"; return; }
+  pricesBox.innerHTML=html; pricesBox.style.display="flex";
+}
+function renderCountryLinks(name){
+  var sel=getCountries(), q=encodeURIComponent((name||"").trim());
+  countryLinks.innerHTML="";
+  if(!q || !sel.length){ countryLinks.style.display="none"; return; }
+  COUNTRIES.forEach(function(c){
+    if(sel.indexOf(c.code)<0) return;
+    var a=document.createElement("a");
+    a.target="_blank"; a.rel="noopener";
+    a.href="https://www.cardmarket.com/"+c.lang+"/YuGiOh/Products/Search?searchString="+q;
+    a.textContent=flag(c.code)+" "+c.name;
+    countryLinks.appendChild(a);
+  });
+  countryLinks.style.display=countryLinks.children.length?"flex":"none";
+}
+function flag(code){
+  return code.replace(/./g,function(ch){ return String.fromCodePoint(127397+ch.charCodeAt(0)); });
 }
 function renderCandidates(list){
   cands.innerHTML="";
@@ -384,6 +474,7 @@ function buildLink(q){ q=(q||"").trim();
 
 /* Start */
 refreshKeyState();
+renderCtryList();
 $("diagJs").textContent="JS läuft ✓ - bereit";
 say("Karte fotografieren, um zu starten.");
 </script>
