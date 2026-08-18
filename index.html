@@ -7,97 +7,118 @@
 <title>Yu-Gi-Oh! KI-Karten-Scanner</title>
 <style>
   :root{
-    --bg:#0f172a; --panel:#1e293b; --panel2:#334155;
-    --text:#f1f5f9; --muted:#94a3b8; --accent:#f59e0b; --accent2:#fbbf24;
-    --ok:#22c55e; --err:#ef4444; --line:#475569; --blue:#3b82f6;
+    color-scheme: light dark;
+    --bg:#F2F2F7; --panel:#FFFFFF; --panel2:#E9E9EB; --seg-active:#FFFFFF;
+    --text:#1C1C1E; --muted:#8E8E93; --accent:#007AFF; --accent2:#007AFF;
+    --ok:#34C759; --err:#FF3B30; --line:rgba(60,60,67,.29);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#000000; --panel:#1C1C1E; --panel2:#2C2C2E; --seg-active:#636366;
+      --text:#FFFFFF; --muted:#98989E; --accent:#0A84FF; --accent2:#0A84FF;
+      --ok:#30D158; --err:#FF453B; --line:rgba(84,84,88,.65);
+    }
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0; padding:0; background:var(--bg); color:var(--text);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
-  body{max-width:600px; margin:0 auto; padding:12px 12px 48px;}
-  h1{font-size:1.25rem; margin:6px 0 2px;}
-  .sub{color:var(--muted); font-size:.82rem; margin:0 0 8px; line-height:1.4;}
-  .diag{font-size:.72rem; margin:0 0 6px; color:var(--muted);}
-  .diag b{color:var(--ok);}
-  #errbanner{display:none; background:var(--err); color:#fff; padding:10px 12px;
-    border-radius:10px; font-size:.8rem; margin:8px 0; white-space:pre-wrap; word-break:break-word;}
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;}
+  body{max-width:600px; margin:0 auto;
+    padding:calc(env(safe-area-inset-top) + 14px) 16px calc(env(safe-area-inset-bottom) + 48px);}
+  h1{font-size:1.75rem; font-weight:700; letter-spacing:-.022em; margin:6px 0 2px;}
+  .sub{color:var(--muted); font-size:.9rem; margin:2px 0 10px; line-height:1.4;}
+  .diag{font-size:.75rem; margin:0 0 8px; color:var(--muted);}
+  .diag b{color:var(--ok); font-weight:600;}
+  #errbanner{display:none; background:var(--err); color:#fff; padding:12px 14px;
+    border-radius:12px; font-size:.85rem; margin:8px 0; white-space:pre-wrap; word-break:break-word;}
 
-  .keybox{background:var(--panel); border:1px solid var(--line); border-radius:12px;
-    padding:12px; margin:8px 0; font-size:.82rem; line-height:1.45;}
-  .keybox.need{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
-  .keybox h3{margin:0 0 6px; font-size:.9rem;}
-  .keybox ol{margin:6px 0 8px; padding-left:20px;}
-  .keybox a{color:var(--accent2);}
-  .keybox input{width:100%; margin-top:6px; padding:11px; border-radius:9px;
-    border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:.95rem;}
-  .keybox .krow{display:flex; gap:8px; margin-top:8px; align-items:center;}
-  .keybox button{padding:10px 14px; border-radius:9px; border:none; font-weight:700;
-    background:var(--accent); color:#111;}
-  .keystate{font-size:.75rem;}
-  .keystate.ok{color:var(--ok);} .keystate.no{color:var(--muted);}
+  .keybox{background:var(--panel); border:none; border-radius:14px;
+    padding:14px 16px; margin:10px 0; font-size:.88rem; line-height:1.5;
+    box-shadow:0 1px 2px rgba(0,0,0,.05);}
+  .keybox.need{box-shadow:0 0 0 2px var(--accent);}
+  .keybox h3{margin:0 0 6px; font-size:.95rem; font-weight:600;}
+  .keybox ol{margin:6px 0 10px; padding-left:20px;}
+  .keybox a{color:var(--accent); text-decoration:none;}
+  .keybox input{width:100%; margin-top:6px; padding:12px; border-radius:10px;
+    border:1px solid var(--line); background:var(--bg); color:var(--text); font-size:1rem;}
+  .keybox .krow{display:flex; gap:8px; margin-top:10px; align-items:center;}
+  .keybox button{padding:11px 16px; border-radius:10px; border:none; font-weight:600;
+    font-size:.95rem; background:var(--accent); color:#fff;}
+  .keystate{font-size:.78rem;}
+  .keystate.ok{color:var(--ok); font-weight:600;} .keystate.no{color:var(--muted);}
 
-  .step{font-size:.72rem; color:var(--accent2); font-weight:700; letter-spacing:.03em;
-    text-transform:uppercase; margin:18px 0 6px;}
-  .row{display:flex; gap:8px; margin-top:10px;}
-  .btn{flex:1; padding:16px; border-radius:12px; border:none; font-weight:700;
-    font-size:1.02rem; background:var(--accent); color:#111;}
-  .btn:active{transform:translateY(1px);}
-  .btn.sec{background:var(--panel2); color:var(--text);}
-  .btn.ok{background:var(--ok); color:#04220f;}
-  .btn:disabled{opacity:.45;}
+  .step{font-size:.78rem; color:var(--muted); font-weight:600; letter-spacing:.01em;
+    text-transform:uppercase; margin:20px 4px 8px;}
+  .row{display:flex; gap:10px; margin-top:10px;}
+  .btn{flex:1; padding:15px; border-radius:12px; border:none; font-weight:600;
+    font-size:1.06rem; background:var(--accent); color:#fff; transition:opacity .15s;}
+  .btn:active{opacity:.65;}
+  .btn.sec{background:var(--panel2); color:var(--accent);}
+  .btn.ok{background:var(--ok); color:#fff;}
+  .btn:disabled{opacity:.4;}
   #fileInput{display:none;}
 
   .camwrap{position:relative; width:100%; aspect-ratio:3/4; background:#000;
-    border-radius:14px; overflow:hidden; border:1px solid var(--line); margin-top:4px; display:none;}
+    border-radius:16px; overflow:hidden; margin-top:6px; display:none;}
   video{width:100%; height:100%; object-fit:cover; display:block;}
-  .guide{position:absolute; inset:8% 10%; border:2px dashed rgba(255,255,255,.6); border-radius:10px; pointer-events:none;}
+  .guide{position:absolute; inset:8% 10%; border:2px dashed rgba(255,255,255,.7); border-radius:12px; pointer-events:none;}
 
-  .status{margin-top:12px; font-size:.9rem; color:var(--text); min-height:1.2em; font-weight:600;}
-  .bar{height:6px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-top:6px; display:none;}
-  .bar>i{display:block; height:100%; width:35%; background:var(--accent); animation:ind 1s linear infinite;}
+  .status{margin-top:14px; font-size:.95rem; color:var(--text); min-height:1.2em; font-weight:500;}
+  .bar{height:5px; background:var(--panel2); border-radius:99px; overflow:hidden; margin-top:8px; display:none;}
+  .bar>i{display:block; height:100%; width:35%; background:var(--accent); border-radius:99px; animation:ind 1s linear infinite;}
   @keyframes ind{0%{margin-left:-35%}100%{margin-left:100%}}
 
-  .card{margin-top:10px; background:var(--panel); border:1px solid var(--line);
-    border-radius:14px; padding:14px; display:none;}
-  .shot{width:100%; max-height:230px; object-fit:contain; border-radius:10px; background:#000; display:none;}
-  .found{display:flex; gap:12px; margin-top:12px; align-items:center;}
-  .found img{width:70px; border-radius:6px; background:#000; flex:0 0 auto;}
-  .found .fi b{display:block; font-size:1.02rem;}
-  .found .fi span{font-size:.78rem; color:var(--muted);}
+  .card{margin-top:12px; background:var(--panel); border:none;
+    border-radius:16px; padding:16px; display:none; box-shadow:0 1px 2px rgba(0,0,0,.05);}
+  .shot{width:100%; max-height:240px; object-fit:contain; border-radius:12px; background:#000; display:none;}
+  .found{display:flex; gap:14px; margin-top:14px; align-items:center;}
+  .found img{width:72px; border-radius:8px; background:#000; flex:0 0 auto;}
+  .found .fi b{display:block; font-size:1.08rem; font-weight:600;}
+  .found .fi span{font-size:.82rem; color:var(--muted);}
 
-  label.fld{display:block; font-size:.75rem; color:var(--muted); margin:12px 0 4px;}
+  label.fld{display:block; font-size:.8rem; color:var(--muted); margin:14px 0 6px;}
   .searchRow{display:flex; gap:8px;}
-  input[type=text]{flex:1; padding:12px; border-radius:10px; border:1px solid var(--line);
+  input[type=text]{flex:1; padding:12px 14px; border-radius:10px; border:1px solid var(--line);
     background:var(--bg); color:var(--text); font-size:1.05rem;}
-  .searchRow button{flex:0 0 auto; padding:12px 16px; border-radius:10px; border:none;
-    background:var(--accent2); color:#111; font-weight:700;}
-  .candTitle{font-size:.78rem; color:var(--muted); margin:14px 0 6px;}
-  .cand{display:flex; gap:10px; align-items:center; width:100%; text-align:left;
-    background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:8px; margin-bottom:8px; color:var(--text);}
-  .cand.selected{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset;}
-  .cand img{width:40px; height:auto; border-radius:4px; background:#000; flex:0 0 auto;}
+  .searchRow button{flex:0 0 auto; padding:12px 18px; border-radius:10px; border:none;
+    background:var(--accent); color:#fff; font-weight:600;}
+  .candTitle{font-size:.8rem; color:var(--muted); margin:16px 0 8px;}
+  .cand{display:flex; gap:12px; align-items:center; width:100%; text-align:left;
+    background:var(--bg); border:none; border-radius:12px; padding:10px; margin-bottom:8px; color:var(--text);}
+  .cand.selected{box-shadow:0 0 0 2px var(--accent) inset;}
+  .cand img{width:42px; height:auto; border-radius:5px; background:#000; flex:0 0 auto;}
   .cand .cinfo{flex:1; min-width:0;}
-  .cand .cinfo b{display:block; font-size:.9rem; line-height:1.2;}
-  .cand .cinfo span{font-size:.72rem; color:var(--muted);}
-  .cand .score{font-size:.68rem; color:var(--accent2); font-weight:700;}
+  .cand .cinfo b{display:block; font-size:.95rem; font-weight:600; line-height:1.25;}
+  .cand .cinfo span{font-size:.75rem; color:var(--muted);}
+  .cand .score{font-size:.72rem; color:var(--accent); font-weight:600;}
   .cmbtn{display:block; text-align:center; text-decoration:none; margin-top:14px;
-    padding:15px; border-radius:12px; background:var(--ok); color:#04220f; font-weight:800; font-size:1.05rem;}
-  .prices{margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;}
-  .price{flex:1; min-width:120px; background:var(--bg); border:1px solid var(--line);
-    border-radius:10px; padding:10px 12px;}
-  .price .pl{font-size:.7rem; color:var(--muted);}
-  .price .pv{font-size:1.15rem; font-weight:800; color:var(--accent2);}
-  .ctrylinks{margin-top:12px; display:flex; gap:8px; flex-wrap:wrap;}
+    padding:15px; border-radius:12px; background:var(--accent); color:#fff; font-weight:600; font-size:1.06rem;
+    transition:opacity .15s;}
+  .cmbtn:active{opacity:.65;}
+  .prices{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;}
+  .price{flex:1; min-width:120px; background:var(--bg); border:none;
+    border-radius:12px; padding:12px 14px;}
+  .price .pl{font-size:.72rem; color:var(--muted);}
+  .price .pv{font-size:1.25rem; font-weight:700; color:var(--text); margin-top:2px;}
+  .ctrylinks{margin-top:14px; display:flex; gap:10px; flex-wrap:wrap;}
   .ctrylinks a{flex:1; min-width:130px; text-align:center; text-decoration:none;
-    background:var(--panel2); color:var(--text); border:1px solid var(--line);
-    border-radius:10px; padding:11px; font-weight:700; font-size:.9rem;}
-  .ctryitem{display:flex; align-items:center; gap:8px; padding:7px 4px; font-size:.92rem;}
-  .ctryitem input{width:20px; height:20px;}
+    background:var(--panel2); color:var(--accent);
+    border-radius:12px; padding:12px; font-weight:600; font-size:.92rem;}
+  .ctryitem{display:flex; align-items:center; gap:10px; padding:9px 4px; font-size:.98rem;}
+  .ctryitem input{width:22px; height:22px; accent-color:var(--accent);}
   canvas.hidden{display:none;}
-  .foot{margin-top:22px; font-size:.72rem; color:var(--muted); line-height:1.5;}
-  .toast{position:fixed; left:50%; bottom:18px; transform:translateX(-50%);
-    background:#111; color:#fff; padding:10px 16px; border-radius:10px; font-size:.85rem;
-    max-width:92%; display:none; z-index:9; border:1px solid var(--line);}
+  .foot{margin-top:24px; font-size:.75rem; color:var(--muted); line-height:1.5;}
+  .toast{position:fixed; left:50%; bottom:calc(env(safe-area-inset-bottom) + 18px); transform:translateX(-50%);
+    background:rgba(30,30,30,.92); color:#fff; padding:12px 18px; border-radius:14px; font-size:.88rem;
+    max-width:92%; display:none; z-index:9; backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);}
+
+  /* Segmentierte Steuerelemente (iOS-Stil) */
+  .modes, .lang{display:flex; gap:2px; background:var(--panel2); border-radius:9px; padding:2px;}
+  .modes{margin-top:14px;} .lang{margin-top:8px;}
+  .modes button, .lang button{flex:1; padding:8px 6px; border-radius:7px; border:none;
+    background:transparent; color:var(--text); font-weight:500; font-size:.9rem;}
+  .modes button.active, .lang button.active{background:var(--seg-active); font-weight:600;
+    box-shadow:0 1px 3px rgba(0,0,0,.14);}
 </style>
 </head>
 <body>
@@ -180,6 +201,10 @@
     <div id="cands"></div>
   </div>
   <a class="cmbtn" id="cmLink" target="_blank" rel="noopener">🛒 Auf Cardmarket suchen</a>
+  <div id="linkinfo" style="font-size:.66rem;color:var(--muted);margin-top:6px;word-break:break-all"></div>
+  <div id="setInfo" style="font-size:.82rem;color:var(--accent2);font-weight:700;margin-top:12px;display:none"></div>
+  <a class="cmbtn" id="cmSetLink" target="_blank" rel="noopener" style="display:none;background:var(--panel2);color:var(--accent);margin-top:8px">🔎 Set-Code</a>
+  <div id="setLinkInfo" style="font-size:.66rem;color:var(--muted);margin-top:6px;word-break:break-all"></div>
 </div>
 
 <canvas id="work" class="hidden"></canvas>
@@ -194,7 +219,7 @@ $("diagJs").textContent = "JS läuft ✓";
 
 var CM_BASE="https://www.cardmarket.com/de/YuGiOh/Products/Search?searchString=";
 var OPENAI_URL="https://api.openai.com/v1/chat/completions";
-var MODEL="gpt-4o-mini";
+var MODEL="gpt-4o";
 
 var video=$("video"), camwrap=$("camwrap"), camRow=$("camRow");
 var statusEl=$("status"), bar=$("bar");
@@ -236,6 +261,7 @@ function renderCtryList(){
 }
 
 var stream=null, useBackCam=true;
+var lastSetCode="";
 
 function say(m){ statusEl.textContent=m||""; }
 function showToast(m){ toast.textContent=m; toast.style.display="block";
@@ -302,18 +328,22 @@ function resizeToDataUrl(im){
 }
 
 /* ---------- KI-Erkennung ---------- */
-var PROMPT="You are an expert on the Yu-Gi-Oh! Trading Card Game. The image shows a single Yu-Gi-Oh! card. "+
-  "Identify it precisely. Respond with ONLY a compact JSON object (no markdown, no explanation) with exactly these keys: "+
-  '"name_en" (the official English card name), '+
-  '"name_printed" (the name exactly as printed on the card, which may be German or another language), '+
-  '"set_code" (the set/collector code if visible, e.g. LOB-EN001 or SDCB-DE041, otherwise ""), '+
-  '"confidence" (a number 0 to 1). '+
-  'If you cannot identify a Yu-Gi-Oh! card in the image, return {"name_en":"","name_printed":"","set_code":"","confidence":0}.';
+var PROMPT="You are reading ONE Yu-Gi-Oh! Trading Card Game card in the image. "+
+  "Your MAIN task is to TRANSCRIBE the card's TITLE exactly as printed at the very TOP of the card, letter by letter. "+
+  "Do NOT identify or guess the card from its artwork, its effect text, or your memory of famous cards. "+
+  "Many Yu-Gi-Oh! cards look almost identical in art - the printed TITLE is the only reliable source, so read it carefully. "+
+  "Respond with ONLY a JSON object (no markdown) with exactly these keys: "+
+  '"name_printed" (the title EXACTLY as printed, character by character; may be German, French, etc.), '+
+  '"name_en" (the official English card name ONLY if you are certain; otherwise repeat name_printed), '+
+  '"set_code" (the collector code like LOB-EN001 or SDCB-DE041 if clearly visible at the card edge, otherwise ""), '+
+  '"confidence" (a number 0 to 1 for how sure you are of the title). '+
+  'If no readable card title is present, return {"name_printed":"","name_en":"","set_code":"","confidence":0}.';
 
 function identify(dataUrl){
   var key=getKey();
   result.style.display="block"; found.style.display="none"; candWrap.style.display="none"; cands.innerHTML="";
   pricesBox.style.display="none"; countryLinks.style.display="none";
+  lastSetCode=""; $("setInfo").style.display="none"; $("cmSetLink").style.display="none"; $("setLinkInfo").textContent="";
   shot.style.display="block"; shot.src=dataUrl;
   cmLink.href="#"; cmLink.textContent="🛒 Auf Cardmarket suchen";
   textInput.value="";
@@ -322,7 +352,7 @@ function identify(dataUrl){
   if(!key){ say("Bitte zuerst oben den OpenAI-Schlüssel eintragen."); $("keybox").open=true; $("keybox").classList.add("need"); showToast("Kein Schlüssel gespeichert."); return; }
 
   say("🤖 KI erkennt die Karte …"); busy(true);
-  var body={ model:MODEL, temperature:0, max_tokens:200, messages:[
+  var body={ model:MODEL, temperature:0, max_tokens:200, response_format:{type:"json_object"}, messages:[
     { role:"user", content:[
       { type:"text", text:PROMPT },
       { type:"image_url", image_url:{ url:dataUrl } }
@@ -355,13 +385,13 @@ function handleAI(data){
   var nameEn=(data.name_en||"").trim();
   var namePr=(data.name_printed||"").trim();
   var setc=(data.set_code||"").trim();
-  var best = nameEn || namePr;
-  if(!best){ say("Keine Karte erkannt – bitte näher/schärfer fotografieren."); textInput.value=""; return; }
+  lastSetCode=setc;
+  if(!nameEn && !namePr){ say("Keine Karte erkannt – bitte näher/schärfer fotografieren."); textInput.value=""; return; }
 
-  textInput.value=best; buildLink(best);
-  say("Erkannt: " + best + (setc?(" ("+setc+")"):"") + " – prüfe Datenbank …");
-  // Über die Datenbank das offizielle Bild + exakten Namen holen/bestätigen
-  verifyAndSearch(best, namePr);
+  var shown = namePr || nameEn;
+  textInput.value=shown; buildLink(shown,false); renderCountryLinks(shown,false);
+  say("Gelesen: " + shown + (setc?(" ("+setc+")"):"") + " – prüfe Datenbank …");
+  verifyAndSearch(nameEn, namePr);
 }
 
 /* ---------- Datenbank (Bild + Alternativen) ---------- */
@@ -380,20 +410,48 @@ function fnameSearch(q){
     .then(function(r){ return r.ok?r.json():{data:[]}; })
     .then(function(j){ return j.data||[]; }).catch(function(){ return []; });
 }
-function verifyAndSearch(name, printed){
-  fnameSearch(name).then(function(list){
-    if((!list || !list.length) && printed && printed!==name){ return fnameSearch(printed); }
-    return list;
-  }).then(function(list){
-    if(!list || !list.length){ say("Karte übernommen (nicht in DB gefunden) – Cardmarket-Link ist bereit."); candWrap.style.display="none"; return; }
-    list.forEach(function(c){ c._s=similarity(name,c.name); });
-    list.sort(function(a,b){ return b._s-a._s; });
-    var topCard=list[0];
-    showFound(topCard);
-    textInput.value=topCard.name; buildLink(topCard.name);
-    say("Erkannt ✓ – falls falsch, unten korrigieren oder anderen Treffer wählen.");
-    renderCandidates(list.slice(0,6));
+function verifyAndSearch(nameEn, namePrinted){
+  var ref = namePrinted || nameEn;            // der GELESENE Titel hat Vorrang
+  // Suchbegriffe: beide Namen + einzelne/paarweise Wörter (fängt Lesefehler ab)
+  var base=[]; [namePrinted, nameEn].forEach(function(n){ if(n && base.indexOf(n)<0) base.push(n); });
+  var queries=base.slice();
+  base.forEach(function(n){
+    var ws=n.split(/\s+/).filter(function(w){ return w.length>=4; });
+    for(var i=0;i<ws.length-1;i++) queries.push(ws[i]+" "+ws[i+1]);
+    ws.forEach(function(w){ queries.push(w); });
   });
+  var uniq=[]; queries.forEach(function(q){ if(q && uniq.indexOf(q)<0) uniq.push(q); });
+
+  var seen={}, pool=[];
+  (function next(k){
+    if(k>=uniq.length || pool.length>=150){ finish(); return; }
+    fnameSearch(uniq[k]).then(function(res){
+      res.forEach(function(c){ if(!seen[c.id]){ seen[c.id]=1; pool.push(c); } });
+      next(k+1);
+    });
+  })(0);
+
+  function finish(){
+    if(!pool.length){
+      say("Kein Datenbank-Treffer – Link nutzt den gelesenen Namen (Referenzpreis nicht verfügbar).");
+      candWrap.style.display="none"; pricesBox.style.display="none";
+      textInput.value=ref; buildLink(ref,false); renderCountryLinks(ref,false);
+      renderSetLink(null, lastSetCode); return;
+    }
+    // 1) primär nach dem GELESENEN Titel bewerten (verhindert das "Raten")
+    pool.forEach(function(c){ c._s=similarity(ref, c.name); });
+    pool.sort(function(a,b){ return b._s-a._s; });
+    // 2) wenn der gelesene Titel nichts Gutes trifft (z.B. deutsche Karte): auf engl. Namen ausweichen
+    if((!pool[0] || pool[0]._s<0.5) && nameEn && nameEn!==ref){
+      pool.forEach(function(c){ c._s=similarity(nameEn, c.name); });
+      pool.sort(function(a,b){ return b._s-a._s; });
+    }
+    var top=pool.slice(0,6), tc=top[0];
+    showFound(tc);
+    textInput.value=tc.name; buildLink(tc.name,true);
+    renderCandidates(top);
+    say("Erkannt: " + tc.name + " – falls falsch, anderen Treffer antippen oder Namen korrigieren.");
+  }
 }
 function showFound(c){
   found.style.display="flex";
@@ -401,7 +459,8 @@ function showFound(c){
   foundName.textContent=c.name;
   foundMeta.textContent=(c.type||"")+(c.race?(" - "+c.race):"");
   renderPrices(c);
-  renderCountryLinks(c.name);
+  renderCountryLinks(c.name, true);
+  renderSetLink(c, lastSetCode);
 }
 function renderPrices(c){
   var p=(c.card_prices&&c.card_prices[0])?c.card_prices[0]:null;
@@ -411,18 +470,18 @@ function renderPrices(c){
   var html="";
   if(cm>0) html+='<div class="price"><div class="pl">Cardmarket (Referenz)</div><div class="pv">€ '+cm.toFixed(2)+'</div></div>';
   if(tp>0) html+='<div class="price"><div class="pl">TCGplayer</div><div class="pv">$ '+tp.toFixed(2)+'</div></div>';
-  if(!html){ pricesBox.style.display="none"; return; }
+  if(!html){ html='<div class="price"><div class="pl">Referenzpreis</div><div class="pv" style="font-size:.95rem">nicht verfügbar</div></div>'; }
   pricesBox.innerHTML=html; pricesBox.style.display="flex";
 }
-function renderCountryLinks(name){
-  var sel=getCountries(), q=encodeURIComponent((name||"").trim());
+function renderCountryLinks(name, exact){
+  var sel=getCountries(), nm=(name||"").trim();
   countryLinks.innerHTML="";
-  if(!q || !sel.length){ countryLinks.style.display="none"; return; }
+  if(!nm || !sel.length){ countryLinks.style.display="none"; return; }
   COUNTRIES.forEach(function(c){
     if(sel.indexOf(c.code)<0) return;
     var a=document.createElement("a");
     a.target="_blank"; a.rel="noopener";
-    a.href="https://www.cardmarket.com/"+c.lang+"/YuGiOh/Products/Search?searchString="+q;
+    a.href = exact ? cardUrl(nm,c.lang) : searchUrl(nm,c.lang);
     a.textContent=flag(c.code)+" "+c.name;
     countryLinks.appendChild(a);
   });
@@ -446,14 +505,14 @@ function renderCandidates(list){
   candWrap.style.display="block";
 }
 function pick(c,idx){
-  textInput.value=c.name; buildLink(c.name); showFound(c);
+  textInput.value=c.name; buildLink(c.name,true); showFound(c);
   var ch=cands.children; for(var i=0;i<ch.length;i++) ch[i].classList.toggle("selected",i===idx);
 }
 
 /* manuelle Korrektur */
 $("searchBtn").onclick=function(){ manualSearch(textInput.value); };
 textInput.addEventListener("keydown",function(e){ if(e.key==="Enter"){ e.preventDefault(); manualSearch(textInput.value); } });
-textInput.addEventListener("input",function(){ buildLink(textInput.value); });
+textInput.addEventListener("input",function(){ buildLink(textInput.value,false); });
 function manualSearch(q){
   q=(q||"").trim(); if(q.length<2){ showToast("Bitte mehr Text."); return; }
   say("Suche …"); busy(true);
@@ -462,15 +521,31 @@ function manualSearch(q){
     if(!list.length){ say("Keine Treffer – Cardmarket-Link nutzt deinen Text."); candWrap.style.display="none"; found.style.display="none"; return; }
     list.forEach(function(c){ c._s=similarity(q,c.name); });
     list.sort(function(a,b){ return b._s-a._s; });
-    showFound(list[0]); textInput.value=list[0].name; buildLink(list[0].name);
+    showFound(list[0]); textInput.value=list[0].name; buildLink(list[0].name,true);
     renderCandidates(list.slice(0,6)); say("Treffer gefunden.");
   });
 }
 
 /* Cardmarket */
-function buildLink(q){ q=(q||"").trim();
-  cmLink.href=CM_BASE+encodeURIComponent(q);
-  cmLink.textContent='🛒 "'+(q.length>30?q.slice(0,30)+"...":q)+'" auf Cardmarket suchen'; }
+function cmSlug(name){ return (name||"").replace(/['’]/g,"").replace(/[^A-Za-z0-9]+/g,"-").replace(/^-+|-+$/g,""); }
+function cardUrl(name,lang){ return "https://www.cardmarket.com/"+(lang||"de")+"/YuGiOh/Cards/"+cmSlug(name); }
+function searchUrl(name,lang){ return "https://www.cardmarket.com/"+(lang||"de")+"/YuGiOh/Products/Search?searchString="+encodeURIComponent((name||"").trim()); }
+function buildLink(q, exact){ q=(q||"").trim();
+  var url = exact ? cardUrl(q,"de") : searchUrl(q,"de");
+  cmLink.href=url;
+  cmLink.textContent='🛒 "'+(q.length>28?q.slice(0,28)+"...":q)+'" auf Cardmarket'+(exact?" öffnen":" suchen");
+  var li=$("linkinfo"); if(li) li.textContent=url; }
+
+function renderSetLink(card, setCode){
+  var info=$("setInfo"), el=$("cmSetLink"), sli=$("setLinkInfo");
+  setCode=(setCode||"").trim().toUpperCase();
+  if(!setCode){ info.style.display="none"; el.style.display="none"; sli.textContent=""; return; }
+  info.textContent="Set-Code: "+setCode; info.style.display="block";
+  // Google-Suche "cardmarket <Set-Code>" mit + statt %20 (iOS/Google-App verschluckt %20)
+  var url="https://www.google.com/search?q=cardmarket+"+encodeURIComponent(setCode).replace(/%20/g,"+");
+  el.href=url; el.textContent="🔎 "+setCode+" bei Cardmarket finden";
+  el.style.display="block"; sli.textContent=url;
+}
 
 /* Start */
 refreshKeyState();
