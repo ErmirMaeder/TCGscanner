@@ -187,7 +187,7 @@
 
 <div class="camOverlay" id="camOverlay">
   <video id="video" playsinline autoplay muted></video>
-  <div class="camGuide"></div>
+  <div class="camGuide" id="camGuide"></div>
   <div class="camTop">Karte in den Rahmen legen</div>
   <div class="camControls">
     <button id="camCancel" class="camCircle" type="button" aria-label="Abbrechen">✕</button>
@@ -326,8 +326,16 @@ $("switchBtn").onclick=function(){ useBackCam=!useBackCam; startCam(); };
 $("snapBtn").onclick=function(){
   var vw=video.videoWidth, vh=video.videoHeight;
   if(!vw){ showToast("Kamera noch nicht bereit."); return; }
-  var c=document.createElement("canvas"); c.width=vw; c.height=vh;
-  c.getContext("2d").drawImage(video,0,0);
+  // Rahmen (Guide) auf die echten Video-Pixel umrechnen -> nur die Karte ausschneiden
+  var vrect=video.getBoundingClientRect(), grect=$("camGuide").getBoundingClientRect();
+  var scale=Math.max(vrect.width/vw, vrect.height/vh);           // object-fit: cover
+  var offX=vrect.left+(vrect.width-vw*scale)/2, offY=vrect.top+(vrect.height-vh*scale)/2;
+  var sx=(grect.left-offX)/scale, sy=(grect.top-offY)/scale;
+  var sw=grect.width/scale, sh=grect.height/scale;
+  sx=Math.max(0,Math.min(sx,vw)); sy=Math.max(0,Math.min(sy,vh));
+  sw=Math.max(1,Math.min(sw,vw-sx)); sh=Math.max(1,Math.min(sh,vh-sy));
+  var c=document.createElement("canvas"); c.width=Math.round(sw); c.height=Math.round(sh);
+  c.getContext("2d").drawImage(video, sx,sy,sw,sh, 0,0,c.width,c.height);
   var dataUrl=c.toDataURL("image/jpeg",0.92);
   closeCam();
   identify(dataUrl);
@@ -563,8 +571,8 @@ function buildSetLink(code){
   var el=$("cmSetLink"), sli=$("setLinkInfo");
   code=(code||"").trim().toUpperCase();
   if(!code){ el.style.display="none"; sli.textContent=""; return; }
-  // Google-Suche "cardmarket <Set-Code>" mit + statt %20 (iOS/Google-App verschluckt %20)
-  var url="https://www.google.com/search?q=cardmarket+"+encodeURIComponent(code).replace(/%20/g,"+");
+  // DuckDuckGo statt Google: keine iOS-App fängt den Link ab -> bleibt im Standardbrowser (Safari)
+  var url="https://duckduckgo.com/?q=cardmarket+"+encodeURIComponent(code).replace(/%20/g,"+");
   el.href=url; el.textContent="🔎 "+code+" bei Cardmarket finden";
   el.style.display="block"; sli.textContent=url;
 }
