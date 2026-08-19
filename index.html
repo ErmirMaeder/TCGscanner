@@ -571,8 +571,8 @@ function buildSetLink(code){
   var el=$("cmSetLink"), sli=$("setLinkInfo");
   code=(code||"").trim().toUpperCase();
   if(!code){ el.style.display="none"; sli.textContent=""; return; }
-  // DuckDuckGo statt Google: keine iOS-App fängt den Link ab -> bleibt im Standardbrowser (Safari)
-  var url="https://duckduckgo.com/?q=cardmarket+"+encodeURIComponent(code).replace(/%20/g,"+");
+  // Normale Google-Suche "cardmarket <Set-Code>" in neuem Tab
+  var url="https://www.google.com/search?q=cardmarket+"+encodeURIComponent(code).replace(/%20/g,"+");
   el.href=url; el.textContent="🔎 "+code+" bei Cardmarket finden";
   el.style.display="block"; sli.textContent=url;
 }
